@@ -1,11 +1,7 @@
 // src/app/cursos/[slug]/page.tsx
 import { supabase } from '@/lib/supabaseClient';
 
-interface CoursePageProps {
-  params: { slug: string };
-}
-
-export default async function CoursePage({ params }: CoursePageProps) {
+export default async function CoursePage({ params }: { params: { slug: string } }) {
   const { slug } = params;
 
   // Fetch the course data from Supabase
