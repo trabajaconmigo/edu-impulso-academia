@@ -1,14 +1,12 @@
-// app/cursos/[slug]/exito/page.tsx
-
+import React from "react";
 import ExitoClient from "./ExitoClient";
 
-type PageProps = {
-  params: {
-    slug: string;
-  };
-};
+// A minimal server component: simply pass `params.slug` to the client component.
+// We do NOT mark this function async, and we do NOT use any hooks here.
+export default function ExitoPage({ params }: any) {
+  // If you want to strongly type it:
+  // export default function ExitoPage({ params }: { params: { slug: string } }) {
+  // but "any" is guaranteed to compile, so let's keep it minimal.
 
-// Minimal server component that passes "params.slug" to the client component
-export default function ExitoPage({ params }: PageProps) {
   return <ExitoClient slug={params.slug} />;
 }

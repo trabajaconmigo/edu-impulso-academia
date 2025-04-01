@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -19,7 +19,6 @@ export default function ExitoClient({ slug }: { slug: string }) {
   const router = useRouter();
 
   useEffect(() => {
-    // We can do an async function here inside useEffect
     async function fetchData() {
       // 1. Check if user is logged in
       const { data: { session } } = await supabase.auth.getSession();
@@ -53,7 +52,6 @@ export default function ExitoClient({ slug }: { slug: string }) {
       if (!purchaseError && purchaseData) {
         setHasPurchase(true);
       }
-
       setLoading(false);
     }
 
@@ -63,12 +61,11 @@ export default function ExitoClient({ slug }: { slug: string }) {
   if (loading) {
     return <div>Cargando información...</div>;
   }
-
   if (!hasPurchase) {
     return (
       <div style={{ padding: "2rem" }}>
         <h2>Compra no encontrada</h2>
-        <p>No se ha registrado la compra de este curso. Por favor, inténtalo de nuevo o comunícate con soporte.</p>
+        <p>No se ha registrado la compra de este curso.</p>
       </div>
     );
   }
