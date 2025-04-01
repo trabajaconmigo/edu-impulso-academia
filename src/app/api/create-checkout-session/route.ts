@@ -21,23 +21,23 @@ export async function POST(request: Request) {
             product_data: {
               name: courseTitle,
             },
-            unit_amount: Math.round(coursePrice * 100),
+            unit_amount: Math.round(coursePrice * 100), // amount in cents
           },
           quantity: 1,
         },
       ],
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/cursos/${courseSlug}/exito?session_id={CHECKOUT_SESSION_ID}`,
+      // Redirect the user to their profile page after successful purchase.
+      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/perfil?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/cursos/${courseSlug}`,
       metadata: {
         courseId,
         courseSlug,
-        userId,
+        userId, // must pass the logged-in user's ID
       },
     });
 
     return NextResponse.json({ sessionId: session.id });
   } catch (error: unknown) {
-    // Replace 'any' with 'unknown' so we don't get the no-explicit-any error
     const err = error as Error;
     console.error("Error creating checkout session:", err.message);
     return NextResponse.json({ error: err.message }, { status: 500 });
