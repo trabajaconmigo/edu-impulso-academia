@@ -8,7 +8,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    // Removed couponCode since it's unused
+    // Expect: courseId, courseSlug, courseTitle, coursePrice, userId
     const { courseId, courseSlug, courseTitle, coursePrice, userId } = body;
 
     const session = await stripe.checkout.sessions.create({
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
             product_data: {
               name: courseTitle,
             },
-            unit_amount: Math.round(coursePrice * 100), // amount in cents
+            unit_amount: Math.round(coursePrice * 100),
           },
           quantity: 1,
         },
@@ -36,8 +36,10 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({ sessionId: session.id });
-  } catch (error: any) {
-    console.error("Error creating checkout session:", error.message);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    // Replace 'any' with 'unknown' so we don't get the no-explicit-any error
+    const err = error as Error;
+    console.error("Error creating checkout session:", err.message);
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
 interface Course {
@@ -17,11 +17,12 @@ export default function ExitoPage({ params }: { params: { slug: string } }) {
   const [hasPurchase, setHasPurchase] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   useEffect(() => {
     async function fetchData() {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) {
         router.push("/auth/login");
         return;
