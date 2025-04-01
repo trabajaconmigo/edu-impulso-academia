@@ -13,6 +13,17 @@ interface Course {
   promo_video_url?: string;
 }
 
+// Define a type for purchase data returned from Supabase, including the joined course.
+interface Purchase {
+  id: string;
+  user_id: string;
+  course_id: string;
+  payment_id?: string;
+  amount: number;
+  purchased_at: string;
+  course: Course; // the joined course data
+}
+
 export default function ProfilePage() {
   const [coursesPurchased, setCoursesPurchased] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,7 +41,7 @@ export default function ProfilePage() {
       }
       const userId = session.user.id;
 
-      // Query the purchases table and join with courses table
+      // Query the purchases table and join with the courses table
       const { data: purchaseData, error } = await supabase
         .from("purchases")
         .select("*, course:course_id(*)")
@@ -39,8 +50,10 @@ export default function ProfilePage() {
       if (error) {
         console.error("Error fetching purchases:", error.message);
       } else if (purchaseData) {
-        // Map over purchaseData to extract the course details
-        const courses = purchaseData.map((item: any) => item.course);
+        // Cast purchaseData to the Purchase[] type
+        const purchases = purchaseData as Purchase[];
+        // Extract the course information from each purchase
+        const courses = purchases.map((item) => item.course);
         setCoursesPurchased(courses);
       }
       setLoading(false);
