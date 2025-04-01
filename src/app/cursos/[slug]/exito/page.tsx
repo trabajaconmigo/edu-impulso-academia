@@ -9,6 +9,7 @@ interface Course {
   title: string;
   description: string;
   promo_video_url?: string;
+  slug: string;
 }
 
 export default function ExitoPage({ params }: { params: { slug: string } }) {
@@ -17,11 +18,9 @@ export default function ExitoPage({ params }: { params: { slug: string } }) {
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const sessionId = searchParams.get("session_id");
 
   useEffect(() => {
     async function fetchData() {
-      // Get current session (user must be logged in)
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         router.push("/auth/login");
@@ -29,27 +28,25 @@ export default function ExitoPage({ params }: { params: { slug: string } }) {
       }
       const userId = session.user.id;
 
-      // Fetch course by slug
+      // Fetch course details by slug
       const { data: courseData, error: courseError } = await supabase
         .from("courses")
         .select("*")
         .eq("slug", params.slug)
         .single();
-
       if (courseError || !courseData) {
         router.push("/404");
         return;
       }
       setCourse(courseData);
 
-      // Check if user purchased this course
+      // Check if the user has purchased this course
       const { data: purchaseData, error: purchaseError } = await supabase
         .from("purchases")
         .select("*")
         .eq("user_id", userId)
         .eq("course_id", courseData.id)
         .single();
-
       if (!purchaseError && purchaseData) {
         setHasPurchase(true);
       } else {
@@ -57,14 +54,12 @@ export default function ExitoPage({ params }: { params: { slug: string } }) {
       }
       setLoading(false);
     }
-
     fetchData();
   }, [params.slug, router]);
 
   if (loading) {
     return <div>Cargando información...</div>;
   }
-
   if (!hasPurchase) {
     return (
       <div style={{ padding: "2rem" }}>
@@ -73,7 +68,6 @@ export default function ExitoPage({ params }: { params: { slug: string } }) {
       </div>
     );
   }
-
   return (
     <div style={{ padding: "2rem" }}>
       <h1>{course?.title}</h1>
@@ -83,14 +77,13 @@ export default function ExitoPage({ params }: { params: { slug: string } }) {
           <iframe
             width="560"
             height="315"
-            src={course?.promo_video_url}
+            src={course.promo_video_url}
             title="Video de Curso"
             frameBorder="0"
             allowFullScreen
           ></iframe>
         </div>
       )}
-      {/* Render additional unlocked content here */}
       <div>
         <h2>Contenido Desbloqueado</h2>
         <p>Aquí se muestran los videos y recursos del curso.</p>

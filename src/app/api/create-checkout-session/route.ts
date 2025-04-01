@@ -8,10 +8,9 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    // Expect these fields from the client
-    const { courseId, courseSlug, courseTitle, coursePrice, userId, couponCode } = body;
+    // Removed couponCode since it's unused
+    const { courseId, courseSlug, courseTitle, coursePrice, userId } = body;
 
-    // Create a Checkout session with the correct success URL (using courseSlug)
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       mode: "payment",
@@ -22,7 +21,7 @@ export async function POST(request: Request) {
             product_data: {
               name: courseTitle,
             },
-            unit_amount: Math.round(coursePrice * 100),
+            unit_amount: Math.round(coursePrice * 100), // amount in cents
           },
           quantity: 1,
         },
@@ -32,7 +31,7 @@ export async function POST(request: Request) {
       metadata: {
         courseId,
         courseSlug,
-        userId, // Important: Pass the current logged-in user's ID
+        userId,
       },
     });
 
