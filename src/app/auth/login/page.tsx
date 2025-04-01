@@ -1,9 +1,10 @@
-// app/auth/login/page.tsx
 "use client";
+
 import { FormEvent, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
-import styles from "../AuthForms.module.css"; // Or wherever you put the styles
+import { supabase } from "@/lib/supabaseClient";
+import styles from "../AuthForms.module.css"; 
+// ^ If your CSS module is in a different folder, update this path accordingly
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -15,20 +16,31 @@ export default function LoginPage() {
     e.preventDefault();
     setErrorMsg("");
 
+    // Use the Supabase auth client to sign in with email/password
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       setErrorMsg(error.message);
     } else {
+      // On success, push user to /perfil
       router.push("/perfil");
     }
   }
 
   async function handleGoogleLogin() {
     setErrorMsg("");
+
+    // Determine the correct redirect URL based on environment
+    // If you ONLY want to use the production domain, you can omit the logic and hardcode it.
+    const redirectURL =
+      process.env.NODE_ENV === "development"
+        ? "http://localhost:3000/perfil"
+        : "https://edu-impulso-academia.vercel.app/perfil";
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: "http://localhost:3000/perfil" },
+      options: { redirectTo: redirectURL },
     });
+
     if (error) {
       setErrorMsg(error.message);
     }
@@ -38,7 +50,6 @@ export default function LoginPage() {
     <div className={styles.pageWrapper}>
       <div className={styles.loginContainer}>
         <h1>Iniciar Sesión</h1>
-
         {errorMsg && <p className={styles.errorMsg}>{errorMsg}</p>}
 
         <form onSubmit={handleLogin} className={styles.formContainer}>
