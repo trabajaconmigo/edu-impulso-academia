@@ -12,8 +12,15 @@ interface Course {
   slug: string;
 }
 
-// Make it a client component without "async" – we do data fetching inside useEffect.
-export default function ExitoPage({ params }: { params: { slug: string } }) {
+// Define the prop type for this page
+type ExitoPageProps = {
+  // `params` is not async here because we’re in a client component
+  params: {
+    slug: string;
+  };
+};
+
+export default function ExitoPage({ params }: ExitoPageProps) {
   const [course, setCourse] = useState<Course | null>(null);
   const [hasPurchase, setHasPurchase] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
@@ -22,14 +29,18 @@ export default function ExitoPage({ params }: { params: { slug: string } }) {
 
   useEffect(() => {
     async function fetchData() {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
       if (!session) {
         router.push("/auth/login");
         return;
       }
+
       const userId = session.user.id;
 
-      // Fetch course details by slug
+      // Fetch the course by slug
       const { data: courseData, error: courseError } = await supabase
         .from("courses")
         .select("*")
@@ -42,7 +53,7 @@ export default function ExitoPage({ params }: { params: { slug: string } }) {
       }
       setCourse(courseData);
 
-      // Check if user purchased this course
+      // Check if the user has purchased this course
       const { data: purchaseData, error: purchaseError } = await supabase
         .from("purchases")
         .select("*")
@@ -55,6 +66,7 @@ export default function ExitoPage({ params }: { params: { slug: string } }) {
       } else {
         setHasPurchase(false);
       }
+
       setLoading(false);
     }
 
@@ -64,6 +76,7 @@ export default function ExitoPage({ params }: { params: { slug: string } }) {
   if (loading) {
     return <div>Cargando información...</div>;
   }
+
   if (!hasPurchase) {
     return (
       <div style={{ padding: "2rem" }}>
@@ -73,6 +86,7 @@ export default function ExitoPage({ params }: { params: { slug: string } }) {
     );
   }
 
+  // Render the unlocked content
   return (
     <div style={{ padding: "2rem" }}>
       <h1>{course?.title}</h1>
