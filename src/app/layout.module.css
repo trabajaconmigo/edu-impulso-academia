@@ -1,0 +1,13 @@
+/* app/layout.module.css */
+.bodyLayout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+
+.mainContent {
+  flex: 1;
+  padding: 2rem;
+  background-color: #fff;
+}
