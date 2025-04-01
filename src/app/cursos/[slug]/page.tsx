@@ -1,14 +1,14 @@
-// src/app/cursos/[slug]/page.tsx
 import { supabase } from "@/lib/supabaseClient";
 import { notFound } from "next/navigation";
 import Script from "next/script";
 import Link from "next/link";
-import BuyButton from "./BuyButton"; // Ensure you have a BuyButton component
+import BuyButton from "./BuyButton";
 
-export default async function CourseDetailPage({ params }: { params: { slug: string } }) {
-  const { slug } = params;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export default async function CourseDetailPage(props: any) {
+  const { slug } = props.params;
 
-  // Fetch the course details by matching the slug
+  // Fetch the course details from Supabase
   const { data: course, error } = await supabase
     .from("courses")
     .select("*")
@@ -21,7 +21,6 @@ export default async function CourseDetailPage({ params }: { params: { slug: str
 
   return (
     <div style={{ padding: "2rem" }}>
-      {/* Inline script must have an "id" attribute */}
       <Script id="fb-pixel-viewcontent" strategy="afterInteractive">
         {`
           if (typeof fbq !== 'undefined') {
@@ -46,7 +45,6 @@ export default async function CourseDetailPage({ params }: { params: { slug: str
         </div>
       )}
 
-      {/* Client-side component to handle Stripe Checkout */}
       <BuyButton course={course} />
 
       <Link href="/cursos">Volver a Cursos</Link>
