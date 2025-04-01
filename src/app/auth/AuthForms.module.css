@@ -1,0 +1,92 @@
+/* app/(auth)/AuthForms.module.css (example path) */
+
+/* Contenedor general */
+.pageWrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  justify-content: center;
+}
+
+/* Login container: centered, with a dark background, rounded corners, and extra spacing */
+.loginContainer {
+  background-color: #f0f0f0;
+  padding: 40px;
+  border-radius: 10px;
+  max-width: 400px;
+  width: 100%;
+  margin: auto; /* Center horizontally */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Back button styling */
+.backButton {
+  background: none;
+  border: none;
+  align-self: flex-start;
+  margin-bottom: 20px;
+}
+
+.backButton a {
+  text-decoration: none;
+  font-size: 1rem;
+  color: #0073b1;
+  transition: color 0.2s;
+}
+
+.backButton a:hover {
+  color: #005582;
+}
+
+/* Form container */
+.formContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+  margin-top: 20px;
+}
+
+/* Input and textarea styling (scoped within formContainer) */
+.formContainer input,
+.formContainer textarea {
+  width: 100%;
+  padding: 10px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  margin-bottom: 10px;
+}
+
+/* Login button styling */
+.loginButton {
+  background-color: #cba344;
+  color: #fff;
+  padding: 10px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.loginButton:hover {
+  background-color: #b28e38;
+}
+
+/* Error message styling */
+.errorMsg {
+  color: red;
+  margin-top: 15px;
+  text-align: center;
+}
+
+/* Signup message styling */
+.signupMsg {
+  margin-top: 15px;
+  text-align: center;
+  font-size: 1rem;
+}
