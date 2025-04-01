@@ -12,17 +12,17 @@ interface Course {
   slug: string;
 }
 
+// Make it a client component without "async" – we do data fetching inside useEffect.
 export default function ExitoPage({ params }: { params: { slug: string } }) {
   const [course, setCourse] = useState<Course | null>(null);
   const [hasPurchase, setHasPurchase] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
+
   const router = useRouter();
 
   useEffect(() => {
     async function fetchData() {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         router.push("/auth/login");
         return;
@@ -35,19 +35,21 @@ export default function ExitoPage({ params }: { params: { slug: string } }) {
         .select("*")
         .eq("slug", params.slug)
         .single();
+
       if (courseError || !courseData) {
         router.push("/404");
         return;
       }
       setCourse(courseData);
 
-      // Check if the user has purchased this course
+      // Check if user purchased this course
       const { data: purchaseData, error: purchaseError } = await supabase
         .from("purchases")
         .select("*")
         .eq("user_id", userId)
         .eq("course_id", courseData.id)
         .single();
+
       if (!purchaseError && purchaseData) {
         setHasPurchase(true);
       } else {
@@ -55,6 +57,7 @@ export default function ExitoPage({ params }: { params: { slug: string } }) {
       }
       setLoading(false);
     }
+
     fetchData();
   }, [params.slug, router]);
 
@@ -69,6 +72,7 @@ export default function ExitoPage({ params }: { params: { slug: string } }) {
       </div>
     );
   }
+
   return (
     <div style={{ padding: "2rem" }}>
       <h1>{course?.title}</h1>
