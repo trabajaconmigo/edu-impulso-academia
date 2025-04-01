@@ -1,5 +1,4 @@
 "use client";
-
 import { FormEvent, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
@@ -14,7 +13,8 @@ export default function LoginPage() {
     e.preventDefault();
     setErrorMsg("");
 
-    const { data, error } = await supabase.auth.signInWithPassword({
+    // If you don't use 'data', just destructure error only
+    const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -22,23 +22,23 @@ export default function LoginPage() {
     if (error) {
       setErrorMsg(error.message);
     } else {
-      // Optional: redirect user to profile, homepage, or any protected route
       router.push("/perfil");
     }
   }
 
   async function handleGoogleLogin() {
-    const { data, error } = await supabase.auth.signInWithOAuth({
+    setErrorMsg("");
+    // If you don’t use data, rename it to _data or remove it
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: "http://localhost:3000/perfil", // or your production URL
+        redirectTo: "http://localhost:3000/perfil",
       },
     });
 
     if (error) {
       setErrorMsg(error.message);
     }
-    // Google OAuth will redirect away; no local redirect needed here.
   }
 
   return (
@@ -64,7 +64,10 @@ export default function LoginPage() {
       </form>
 
       <div style={{ marginTop: "1rem" }}>
-        <button onClick={handleGoogleLogin} style={{ backgroundColor: "#4285F4", color: "#fff", border: "none", padding: "0.5rem 1rem", borderRadius: 4 }}>
+        <button
+          onClick={handleGoogleLogin}
+          style={{ backgroundColor: "#4285F4", color: "#fff", border: "none", padding: "0.5rem 1rem", borderRadius: 4 }}
+        >
           Iniciar sesión con Google
         </button>
       </div>

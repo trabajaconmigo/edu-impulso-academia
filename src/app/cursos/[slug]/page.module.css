@@ -1,0 +1,9 @@
+/* app/cursos/[slug]/page.module.css */
+.courseContainer {
+    padding: 2rem;
+  }
+  
+  .videoContainer {
+    margin: 1rem 0;
+  }
+  
