@@ -13,7 +13,7 @@ export default function HomePage() {
       </div>
 
       <div className={styles.featured}>
-        <h2>Cursos Destacados</h2>
+        <h2>Cursos Destacados.</h2>
         <div className={styles.cardGrid}>
           <div className={styles.card}>
             <h3>Marketing Digital</h3>
