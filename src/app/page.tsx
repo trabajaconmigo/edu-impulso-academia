@@ -1,4 +1,4 @@
-// app/page.tsx
+import Link from "next/link";
 import styles from "./page.module.css";
 
 export default function HomePage() {
@@ -7,7 +7,9 @@ export default function HomePage() {
       <div className={styles.hero}>
         <h1>Bienvenido a Edu Impulso Academia</h1>
         <p>La mejor plataforma de cursos en línea para expandir tus habilidades.</p>
-        <button className={styles.exploreBtn}>Explorar Cursos</button>
+        <Link href="/cursos">
+          <button className={styles.exploreBtn}>Explorar Cursos</button>
+        </Link>
       </div>
 
       <div className={styles.featured}>
