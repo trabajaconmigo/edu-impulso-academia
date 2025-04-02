@@ -1,4 +1,3 @@
-// app/checkout/OxxoPaymentForm.tsx
 "use client";
 
 import { useState } from "react";
@@ -7,6 +6,14 @@ import { useStripe } from "@stripe/react-stripe-js";
 interface OxxoPaymentFormProps {
   courseId: string;
   amount: number;
+}
+
+interface OxxoDisplayDetails {
+  hosted_voucher_url?: string;
+}
+
+interface OxxoNextAction {
+  oxxo_display_details?: OxxoDisplayDetails;
 }
 
 export default function OxxoPaymentForm({ courseId, amount }: OxxoPaymentFormProps) {
@@ -20,7 +27,6 @@ export default function OxxoPaymentForm({ courseId, amount }: OxxoPaymentFormPro
     setErrorMsg("");
 
     try {
-      // Create a PaymentIntent for OXXO on your server
       const res = await fetch("/api/create-payment-intent-oxxo", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -34,7 +40,6 @@ export default function OxxoPaymentForm({ courseId, amount }: OxxoPaymentFormPro
         return;
       }
 
-      // Confirm the PaymentIntent with OXXO
       const result = await stripe!.confirmOxxoPayment(clientSecret, {
         payment_method: {
           billing_details: {
@@ -47,16 +52,18 @@ export default function OxxoPaymentForm({ courseId, amount }: OxxoPaymentFormPro
       if (result.error) {
         setErrorMsg(result.error.message || "Payment failed");
       } else if (result.paymentIntent) {
-        // Cast next_action to any to access oxxo_display_details
-        const nextAction = result.paymentIntent.next_action as any;
+        // Cast next_action to our defined OxxoNextAction type
+        const nextAction = result.paymentIntent.next_action as OxxoNextAction;
         const voucher = nextAction?.oxxo_display_details?.hosted_voucher_url;
         if (voucher) {
           setVoucherUrl(voucher);
         } else {
-          setErrorMsg("No voucher information received. It might take a few moments for voucher details to become available.");
+          setErrorMsg(
+            "No voucher information received. It might take a few moments for voucher details to become available."
+          );
         }
       }
-    } catch (err) {
+    } catch (error: unknown) {
       setErrorMsg("Error processing OXXO payment");
     }
     setLoading(false);
@@ -70,7 +77,9 @@ export default function OxxoPaymentForm({ courseId, amount }: OxxoPaymentFormPro
       {errorMsg && <div style={{ color: "red" }}>{errorMsg}</div>}
       {voucherUrl && (
         <div style={{ marginTop: "1rem" }}>
-          <p>Para completar el pago, visita una tienda OXXO y muestra este comprobante:</p>
+          <p>
+            Para completar el pago, visita una tienda OXXO y muestra este comprobante:
+          </p>
           <a href={voucherUrl} target="_blank" rel="noopener noreferrer">
             Ver comprobante de pago
           </a>

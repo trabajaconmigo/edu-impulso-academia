@@ -9,7 +9,6 @@ export async function POST(request: Request) {
   try {
     const { courseId, amount } = await request.json();
 
-    // Make sure 'amount' is an integer (in cents) and greater than 0
     if (!amount || amount <= 0) {
       return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
     }
@@ -22,12 +21,14 @@ export async function POST(request: Request) {
       metadata: { courseId },
     });
 
-    // Debug: Log PaymentIntent to see if client_secret exists
     console.log("Created PaymentIntent:", paymentIntent);
-
     return NextResponse.json({ clientSecret: paymentIntent.client_secret });
-  } catch (error: any) {
-    console.error("Error creating PaymentIntent:", error.message);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    let errorMessage = "An unknown error occurred";
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    console.error("Error creating PaymentIntent:", errorMessage);
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
