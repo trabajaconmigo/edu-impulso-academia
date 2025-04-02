@@ -26,13 +26,13 @@ export async function POST(request: Request) {
         process.env.STRIPE_WEBHOOK_SECRET!
       );
     } catch (unknownError) {
-      // We capture the error as unknown, then narrow it if it's an instance of Error
       if (unknownError instanceof Error) {
         console.error("Webhook signature verification failed:", unknownError.message);
       }
       return NextResponse.json({ error: "Webhook Error" }, { status: 400 });
     }
 
+    // Handle checkout session events (for card payments)
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
       const courseId = session.metadata?.courseId;
@@ -50,6 +50,35 @@ export async function POST(request: Request) {
             payment_id: session.id,
             amount: amount,
             purchased_at: new Date().toISOString(),
+            status: "succeeded",
+          });
+        if (error) {
+          console.error("Error inserting purchase:", error.message);
+        } else {
+          console.log("Purchase inserted successfully for course:", courseId);
+        }
+      }
+    }
+    // Handle PaymentIntent events (for OXXO or direct PaymentIntent flows)
+    else if (event.type === "payment_intent.succeeded") {
+      const paymentIntent = event.data.object as Stripe.PaymentIntent;
+      const courseId = paymentIntent.metadata?.courseId;
+      const userId = paymentIntent.metadata?.userId;
+      // Note: PaymentIntent.amount is in cents, so convert if needed
+      const amount = paymentIntent.amount ? paymentIntent.amount / 100 : null;
+
+      if (!courseId || !userId) {
+        console.error("Missing courseId or userId in PaymentIntent metadata.", { courseId, userId });
+      } else {
+        const { error } = await supabase
+          .from("purchases")
+          .insert({
+            user_id: userId,
+            course_id: courseId,
+            payment_id: paymentIntent.id,
+            amount: amount,
+            purchased_at: new Date().toISOString(),
+            status: "succeeded",
           });
         if (error) {
           console.error("Error inserting purchase:", error.message);
