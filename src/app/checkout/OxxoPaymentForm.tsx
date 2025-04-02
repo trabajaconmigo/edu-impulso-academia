@@ -64,6 +64,7 @@ export default function OxxoPaymentForm({ courseId, amount }: OxxoPaymentFormPro
         }
       }
     } catch (error: unknown) {
+      console.error("Error processing OXXO payment:", error);
       setErrorMsg("Error processing OXXO payment");
     }
     setLoading(false);
