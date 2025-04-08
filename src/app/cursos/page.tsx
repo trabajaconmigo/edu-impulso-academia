@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image"; // ← Switched from <img> to next/image
 import { supabase } from "@/lib/supabaseClient";
 import styles from "./coursesListing.module.css";
 
@@ -43,12 +44,18 @@ export default function CoursesListingPage() {
       ) : (
         <div className={styles.grid}>
           {courses.map((course) => (
-            <Link href={`/cursos/${course.slug}`} key={course.id} className={styles.cardLink}>
+            <Link
+              href={`/cursos/${course.slug}`}
+              key={course.id}
+              className={styles.cardLink}
+            >
               <div className={styles.card}>
                 <div className={styles.cardImageWrapper}>
-                  <img
+                  <Image
                     src={course.thumbnail_url}
                     alt={course.title}
+                    width={400}  // Adjust sizing as desired
+                    height={250} 
                     className={styles.cardImage}
                   />
                 </div>

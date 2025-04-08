@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image"; // ← Replaces <img>
 import styles from "./CourseSidebar.module.css";
 import BuyButton from "./BuyButton";
 import VideoViewPopup from "../../components/VideoViewPopup";
@@ -30,7 +31,6 @@ export default function CourseSidebar({ course }: CourseSidebarProps) {
     }
   };
 
-  // Calculate the original price if a discount exists.
   const originalPrice = course.discount
     ? (course.price / (1 - course.discount)).toFixed(2)
     : null;
@@ -39,7 +39,13 @@ export default function CourseSidebar({ course }: CourseSidebarProps) {
     <div className={styles.sidebar}>
       {/* Imagen del curso y botón para reproducir la vista previa */}
       <div className={styles.courseImage}>
-        <img src={course.thumbnail_url} alt={course.title} />
+        <Image
+          src={course.thumbnail_url}
+          alt={course.title}
+          width={600}
+          height={400}
+          className={styles.someImageClass} // optional, to style it
+        />
         <div className={styles.playButton} onClick={openVideo}>
           <svg viewBox="0 0 24 24">
             <path d="M8 5v14l11-7z" />
@@ -50,13 +56,12 @@ export default function CourseSidebar({ course }: CourseSidebarProps) {
 
       {/* Sección de precios y oferta */}
       <div className={styles.priceSection}>
-        <div className={styles.currentPrice}>
-          MX${course.price.toFixed(2)}
-        </div>
+        <div className={styles.currentPrice}>MX${course.price.toFixed(2)}</div>
         {originalPrice && (
           <>
             <div className={styles.originalPrice}>
-              Precio Original: MX${parseFloat(originalPrice).toFixed(2)}
+              Precio Original: MX$
+              {parseFloat(originalPrice).toFixed(2)}
             </div>
             <div className={styles.discount}>
               {Math.round((course.discount || 0) * 100)}% de descuento

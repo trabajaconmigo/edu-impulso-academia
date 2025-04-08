@@ -1,13 +1,12 @@
-// /src/app/cursos/[slug]/page.tsx
-
 import { notFound } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import Hero from "./Hero";                 
-import StaticSection from "./StaticSection"; // Now dynamic!
+import Hero from "./Hero";
+import StaticSection from "./StaticSection";
 import WhiteBoxSection from "./WhiteBoxSection";
 import CourseSidebar from "./CourseSidebar";
 import styles from "./page.module.css";
 
+// We actually use this interface (casting our DB response to it)
 interface Course {
   id: string;
   title: string;
@@ -20,7 +19,7 @@ interface Course {
   created_by: string;
   last_updated: string;
   language: string;
-  price: number; // Required for dynamic BuyButton
+  price: number; // For dynamic BuyButton
 }
 
 export default async function CoursePage({
@@ -31,16 +30,19 @@ export default async function CoursePage({
   const { slug } = params;
 
   // Fetch course data from Supabase
-  const { data: course, error } = await supabase
+  const { data, error } = await supabase
     .from("courses")
     .select("*")
     .eq("slug", slug)
     .single();
 
-  if (error || !course) {
+  if (error || !data) {
     console.error("Error fetching course:", error);
     return notFound();
   }
+
+  // Typecast the returned data so we 'use' the Course interface
+  const course = data as Course;
 
   return (
     <>
@@ -53,7 +55,7 @@ export default async function CoursePage({
         </div>
 
         <div className={styles.sidebarColumn}>
-          {/* ✅ Pass full course object including price */}
+          {/* Pass full course object including price */}
           <CourseSidebar course={course} />
         </div>
       </div>
