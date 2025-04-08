@@ -1,12 +1,9 @@
-// src/app/cursos/[slug]/CourseSidebar.tsx
-
 "use client";
 
 import React, { useState } from "react";
 import styles from "./CourseSidebar.module.css";
-import BuyButton from "./BuyButton"; // Adjust the path if needed
-import VideoViewPopup from "../../components/VideoViewPopup"; // Adjust path if needed
-import { supabase } from "@/lib/supabaseClient";
+import BuyButton from "./BuyButton";
+import VideoViewPopup from "../../components/VideoViewPopup";
 
 interface Course {
   id: string;
@@ -15,7 +12,7 @@ interface Course {
   thumbnail_url: string;
   discount?: number;
   course_includes?: string;
-  preview_video?: string;  // New property fetched from the courses table
+  preview_video?: string;
 }
 
 interface CourseSidebarProps {
@@ -25,8 +22,6 @@ interface CourseSidebarProps {
 export default function CourseSidebar({ course }: CourseSidebarProps) {
   const [showPopup, setShowPopup] = useState(false);
 
-  // Function to open the video preview popup.
-  // Since we now store preview_video in the courses table, we simply check for it.
   const openVideo = () => {
     if (course.preview_video) {
       setShowPopup(true);
@@ -55,7 +50,9 @@ export default function CourseSidebar({ course }: CourseSidebarProps) {
 
       {/* Sección de precios y oferta */}
       <div className={styles.priceSection}>
-        <div className={styles.currentPrice}>MX${course.price.toFixed(2)}</div>
+        <div className={styles.currentPrice}>
+          MX${course.price.toFixed(2)}
+        </div>
         {originalPrice && (
           <>
             <div className={styles.originalPrice}>
@@ -67,7 +64,9 @@ export default function CourseSidebar({ course }: CourseSidebarProps) {
             <div className={styles.timer}>¡Oferta termina en 4 horas!</div>
           </>
         )}
-        <div className={styles.guarantee}>Garantía de devolución de 30 días</div>
+        <div className={styles.guarantee}>
+          Garantía de devolución de 30 días
+        </div>
       </div>
 
       {/* Botón de compra */}
