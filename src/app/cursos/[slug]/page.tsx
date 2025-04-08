@@ -7,8 +7,20 @@ import CourseSidebar from "./CourseSidebar";
 import styles from "./page.module.css";
 
 interface Course {
-  // ...
+  id: string;
+  title: string;          // Make sure this is present
+  description: string;    // And this
+  subtitle?: string;      // If you need it
+  thumbnail_url: string;
+  slug: string;
+  what_you_ll_learn: string;
+  student_count: number;
+  created_by: string;
+  last_updated: string;
+  language: string;
+  price: number;
 }
+
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default async function CoursePage(props: any) {
