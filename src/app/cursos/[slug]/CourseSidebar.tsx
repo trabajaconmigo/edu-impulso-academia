@@ -4,8 +4,8 @@
 
 import React, { useState } from "react";
 import styles from "./CourseSidebar.module.css";
-import BuyButton from "./BuyButton"; // Adjust the path if needed
-import VideoViewPopup from "../../components/VideoViewPopup"; // Adjust the path if needed
+import BuyButton from "./BuyButton"; // Adjust path if needed
+import VideoViewPopup from "../../components/VideoViewPopup"; // Adjust path if needed
 import { supabase } from "@/lib/supabaseClient";
 
 interface Course {
@@ -29,7 +29,7 @@ export default function CourseSidebar({ course }: CourseSidebarProps) {
   const [showPopup, setShowPopup] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  // Function to fetch the preview video URL
+  // Function to open the video preview popup.
   const openVideo = async () => {
     try {
       console.log("Fetching preview video for course ID:", course.id);
@@ -59,7 +59,7 @@ export default function CourseSidebar({ course }: CourseSidebarProps) {
     }
   };
 
-  // Calculate original price if a discount exists.
+  // Calculate the original price if a discount exists.
   const originalPrice = course.discount
     ? (course.price / (1 - course.discount)).toFixed(2)
     : null;
