@@ -1,0 +1,103 @@
+/* Base container and mobile styles */
+.heroContainer {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    max-width: 1400px;
+    margin: 0 auto;
+    margin-top: -16px;
+    
+  }
+  
+  .heroImage {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  
+  /* Mobile hero text: appears below the image */
+  .heroContent {
+    text-align: center;
+    padding: 1.5rem 1rem;
+    background-color: #fff;
+    margin: 0 auto;  /* Center the container on mobile */
+    max-width: 90%;
+    
+  }
+  
+  /* Button styling */
+  .exploreBtn {
+    background-color: #a435f0;
+    color: #fff;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 1rem;
+  }
+  
+  /* Headings sizes for mobile */
+  .heroContent h1 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+  
+  .heroContent p {
+    font-size: 1.1rem;
+    color: #666;
+    margin-bottom: 1.5rem;
+  }
+  
+  /* DESKTOP and iPad (min-width: 768px) */
+  @media (min-width: 768px) {
+    .heroContainer {
+      max-height: 500px;
+    }
+    
+    .heroImage {
+      width: 100%;
+      height: auto;
+      object-fit: cover;
+      max-height: 500px;
+    }
+  
+    /* Overlay the text on top of the image, positioned left of center */
+    .heroContent {
+      position: absolute;
+      top: 50%;
+      left: 10%;
+      transform: translateY(-50%);
+      max-width: 400px;
+      background-color: rgba(255, 255, 255, 0.85);
+      padding: 2rem;
+      border-radius: 8px;
+      text-align: left;
+      margin: 0; /* Remove auto margin for absolute positioning */
+    }
+  
+    .heroContent h1 {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+  }
+  
+  /* Additional adjustments for iPad portrait (and similar mid-sized screens) */
+  @media (max-width: 1024px) and (orientation: portrait) {
+    .heroContent {
+      max-width: 250px;  /* Even smaller container */
+      padding: 1rem;     /* Reduced padding */
+    }
+    .heroContent h1 {
+      font-size: 1.6rem;  /* Smaller heading */
+      margin-bottom: 0.8rem;
+    }
+    .heroContent p {
+      font-size: 0.9rem;  /* Smaller paragraph text */
+      margin-bottom: 1rem;
+    }
+    .exploreBtn {
+      padding: 0.6rem 1.2rem;  /* Adjust button padding */
+      font-size: 0.9rem;
+    }
+  }
+  

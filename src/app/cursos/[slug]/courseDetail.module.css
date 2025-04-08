@@ -1,0 +1,94 @@
+/* Contenedor principal centrado en 1200px */
+.mainContainer {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+  
+  @media (min-width: 768px) {
+    .mainContainer {
+      flex-direction: row;
+    }
+  }
+  
+  /* Contenido izquierdo: evita superposición con la sidebar */
+  .leftContent {
+    flex: 1;
+    margin-right: 20px; /* Espacio para que no se oculte bajo la sidebar */
+  }
+  
+  /* Wrapper de imagen */
+  .imageWrapper {
+    width: 100%;
+    height: 400px;
+    overflow: hidden;
+    border-radius: 8px;
+  }
+  
+  .detailImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  /* Secciones de información */
+  .descriptionSection,
+  .whatYoullLearnSection {
+    background-color: #f7f7f7;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-top: 1.5rem;
+  }
+  
+  .descriptionSection h2,
+  .whatYoullLearnSection h2 {
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .descriptionSection p,
+  .whatYoullLearnSection p {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #333;
+  }
+  
+  /* Botón para iniciar el curso */
+  .startButton {
+    background-color: #a435f0;
+    color: #fff;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    align-self: flex-start;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+    margin-top: 1.5rem;
+  }
+  
+  .startButton:hover {
+    background-color: #922ec7;
+  }
+  
+  /* Wrapper para la barra lateral */
+  .sidebarWrapper {
+    width: 100%;
+  }
+  
+  @media (min-width: 768px) {
+    .sidebarWrapper {
+      /* Fija la barra lateral en desktop */
+      position: fixed;
+      top: calc(80px + 2rem); /* Se ubica justo debajo del navbar + margen */
+      right: calc((100% - 1200px) / 2);
+      width: 350px;
+      max-height: 500px;
+      overflow: hidden;
+    }
+  }
+  

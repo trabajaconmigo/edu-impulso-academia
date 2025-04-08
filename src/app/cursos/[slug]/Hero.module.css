@@ -1,0 +1,35 @@
+/* Make heroContainer span full viewport width (full-bleed) */
+.heroContainer {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);  /* Shift left to align with viewport */
+  margin-right: calc(50% - 50vw);
+  background-color: #1c1d1f; /* Dark background */
+  /* Remove horizontal padding so background touches left/right edges */
+  padding-top: 1rem;      /* Optional: vertical padding if needed */
+  padding-bottom: 1rem;   /* You can adjust if you want extra space at bottom */
+  /* No left/right padding */
+  margin-top: -18px;
+}
+
+/* Center your content within a max-width container */
+.heroContent {
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: left;
+  padding: 0 1rem; /* Optional internal horizontal padding for text */
+}
+
+.heroTitle {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: #fff;
+}
+
+.heroSubtitle {
+  font-size: 1rem;
+  line-height: 1.5;
+  max-width: 600px;
+  margin: 0;
+  text-align: left;
+  color: rgb(187, 187, 187);
+}

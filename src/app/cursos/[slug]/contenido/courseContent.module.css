@@ -1,0 +1,45 @@
+.contentContainer {
+  max-width: 1400px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.contentContainer h1 {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.lessonList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.lessonItem {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.lessonItem h2 {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.lessonItem p {
+  font-size: 1rem;
+  color: #666;
+  margin-bottom: 1rem;
+}
+
+.examButton {
+  background-color: #a435f0;
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+}

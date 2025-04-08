@@ -1,0 +1,42 @@
+.whiteBox {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 1.5rem;
+  
+}
+
+.whiteBox h2 {
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.whiteBox h3 {
+  font-size: 1.4rem;
+  margin: 1rem 0 0.5rem 0;
+}
+
+.whiteBox p {
+  margin-bottom: 1rem;
+}
+
+.whiteBox ul {
+  list-style-type: disc;
+  margin-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.courseButton {
+  background-color: #a435f0;
+  color: #fff;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s ease;
+}
+
+.courseButton:hover {
+  background-color: #922ec7;
+}

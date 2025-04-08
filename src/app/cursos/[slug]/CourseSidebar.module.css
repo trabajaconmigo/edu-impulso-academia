@@ -1,0 +1,147 @@
+/* CourseSidebar.module.css */
+
+.sidebar {
+  background-color: #fff;
+  border: 1px solid #d1d7dc;
+  border-radius: 8px;
+  padding: 1.5rem;
+  max-width: 350px;
+  width: 100%;
+  box-sizing: border-box;
+  color: #1c1d1f;
+  max-height: 1000px; /* Added max-height to limit sidebar height */
+}
+
+/* Desktop styles */
+@media (min-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 100px;
+    right: calc((100% - 1200px) / 2);
+    max-height: 1000px; /* Adjusted max-height for desktop */
+    overflow-y: auto; /* Added overflow-y for scrolling content */
+  }
+}
+
+/* Course Image and Play Button */
+.courseImage {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.courseImage img {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.playButton {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+}
+
+.playButton svg {
+  width: 60px;
+  height: 60px;
+  fill: #fff;
+  background-color: rgba(0, 0, 0, 0.6);
+  border-radius: 50%;
+  padding: 10px;
+}
+
+.playButton p {
+  margin-top: 5px;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: bold;
+  text-align: center;
+}
+
+/* Price and Discount Section */
+.priceSection {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.currentPrice {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #a435f0;
+  margin: 0.5rem 0;
+}
+
+.originalPrice {
+  text-decoration: line-through;
+  color: #888;
+  margin: 0.5rem 0;
+}
+
+.discount {
+  font-size: 1rem;
+  margin: 0.5rem 0;
+}
+
+.timer {
+  font-size: 0.9rem;
+  margin: 0.5rem 0;
+  color: #d9534f;
+}
+
+.guarantee {
+  font-size: 0.9rem;
+  margin: 0.5rem 0;
+  color: #5cb85c;
+}
+
+/* Course Includes Section */
+.courseIncludes h4 {
+  margin-bottom: 0.5rem;
+}
+
+.courseIncludes ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.courseIncludes li {
+  margin-bottom: 0.3rem;
+  padding-left: 1rem;
+  position: relative;
+}
+
+.courseIncludes li::before {
+  content: "✔";
+  position: absolute;
+  left: 0;
+  color: #a435f0;
+  font-size: 0.9rem;
+}
+
+/* Buy Button */
+.buyButton {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.buyButton button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: bold;
+  color: #fff;
+  background-color: #a435f0;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.buyButton button:hover {
+  background-color: #7c0b8e;
+}

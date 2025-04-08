@@ -11,3 +11,16 @@
   padding: 2rem;
   background-color: #fff;
 }
+
+/* app/layout.module.css */
+.bodyLayout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  font-family: var(--font-open-sans); /* or your chosen default */
+}
+
+.mainContent {
+  flex: 1;
+  padding: 1rem;
+}

@@ -1,14 +1,34 @@
-import { supabase } from "@/lib/supabaseClient";
 import { notFound } from "next/navigation";
-import Script from "next/script";
-import Link from "next/link";
-import BuyButton from "./BuyButton";
+import { supabase } from "@/lib/supabaseClient";
+import Hero from "./Hero";                 
+import StaticSection from "./StaticSection"; // Now dynamic!
+import WhiteBoxSection from "./WhiteBoxSection";
+import CourseSidebar from "./CourseSidebar";
+import styles from "./page.module.css";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export default async function CourseDetailPage(props: any) {
-  const { slug } = props.params;
+interface Course {
+  id: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  thumbnail_url: string;
+  slug: string;
+  what_you_ll_learn: string;
+  student_count: number;
+  created_by: string;
+  last_updated: string;
+  language: string;
+  price: number; // Required for dynamic BuyButton
+}
 
-  // Fetch the course details from Supabase
+export default async function CoursePage({
+  params,
+}: {
+  params: { slug: string };
+}) {
+  const { slug } = params;
+
+  // Fetch course data from Supabase
   const { data: course, error } = await supabase
     .from("courses")
     .select("*")
@@ -16,38 +36,25 @@ export default async function CourseDetailPage(props: any) {
     .single();
 
   if (error || !course) {
+    console.error("Error fetching course:", error);
     return notFound();
   }
 
   return (
-    <div style={{ padding: "2rem" }}>
-      <Script id="fb-pixel-viewcontent" strategy="afterInteractive">
-        {`
-          if (typeof fbq !== 'undefined') {
-            fbq('track', 'ViewContent', { content_name: '${course.title}' });
-          }
-        `}
-      </Script>
+    <>
+      <Hero title={course.title} description={course.description} />
 
-      <h1>{course.title}</h1>
-      <p>{course.description}</p>
-
-      {course.promo_video_url && (
-        <div style={{ margin: "1rem 0" }}>
-          <iframe
-            width="560"
-            height="315"
-            src={course.promo_video_url}
-            title="Video de Presentación"
-            frameBorder="0"
-            allowFullScreen
-          ></iframe>
+      <div className={styles.mainContainer}>
+        <div className={styles.leftColumn}>
+          <StaticSection whatYoullLearn={course.what_you_ll_learn} />
+          <WhiteBoxSection slug={slug} />
         </div>
-      )}
 
-      <BuyButton course={course} />
-
-      <Link href="/cursos">Volver a Cursos</Link>
-    </div>
+        <div className={styles.sidebarColumn}>
+          {/* ✅ Pass full course object including price */}
+          <CourseSidebar course={course} />
+        </div>
+      </div>
+    </>
   );
 }

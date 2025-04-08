@@ -1,52 +1,68 @@
-// src/app/cursos/page.tsx
-import { supabase } from "@/lib/supabaseClient";
-import Link from "next/link";
+"use client";
 
-// Define a TypeScript interface for a course
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { supabase } from "@/lib/supabaseClient";
+import styles from "./coursesListing.module.css";
 interface Course {
   id: string;
-  slug: string;
   title: string;
   description: string;
-  // Add any additional fields as needed
+  thumbnail_url: string;
+  slug: string;
+  price: number;
 }
 
-export default async function CoursesPage() {
-  // Fetch courses from Supabase and order them by creation date (newest first)
-  const { data: courses, error } = await supabase
-    .from("courses")
-    .select("*")
-    .order("created_at", { ascending: false });
+export default function CoursesListingPage() {
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  if (error) {
-    return <div>Error loading courses: {error.message}</div>;
-  }
+  useEffect(() => {
+    async function fetchCourses() {
+      const { data, error } = await supabase
+        .from("courses")
+        .select("id, title, description, thumbnail_url, slug, price");
+      if (error) {
+        console.error("Error fetching courses:", error.message);
+      } else if (data) {
+        setCourses(data as Course[]);
+      }
+      setLoading(false);
+    }
+    fetchCourses();
+  }, []);
 
   return (
-    <div style={{ padding: "2rem" }}>
-      <h1>Cursos</h1>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-          gap: "1rem",
-        }}
-      >
-        {courses?.map((course: Course) => (
-          <div
-            key={course.id}
-            style={{
-              border: "1px solid #ddd",
-              padding: "1rem",
-              borderRadius: "4px",
-            }}
-          >
-            <h2>{course.title}</h2>
-            <p>{course.description.substring(0, 100)}...</p>
-            <Link href={`/cursos/${course.slug}`}>Ver Detalles</Link>
-          </div>
-        ))}
-      </div>
-    </div>
+    <section className={styles.container}>
+      <h1 className={styles.title}>Cursos</h1>
+      {loading ? (
+        <p className={styles.noCourses}>Cargando cursos...</p>
+      ) : courses.length === 0 ? (
+        <p className={styles.noCourses}>No hay cursos disponibles.</p>
+      ) : (
+        <div className={styles.grid}>
+          {courses.map((course) => (
+            <Link href={`/cursos/${course.slug}`} key={course.id} className={styles.cardLink}>
+              <div className={styles.card}>
+                <div className={styles.cardImageWrapper}>
+                  <img
+                    src={course.thumbnail_url}
+                    alt={course.title}
+                    className={styles.cardImage}
+                  />
+                </div>
+                <div className={styles.cardContent}>
+                  <h2 className={styles.cardTitle}>{course.title}</h2>
+                  <p className={styles.cardDesc}>{course.description}</p>
+                  <div className={styles.cardPrice}>
+                    ${course.price.toFixed(2)}
+                  </div>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
