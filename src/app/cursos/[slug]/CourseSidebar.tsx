@@ -4,8 +4,8 @@
 
 import React, { useState } from "react";
 import styles from "./CourseSidebar.module.css";
-import BuyButton from "./BuyButton"; // Adjust path if needed
-import VideoViewPopup from "../../components/VideoViewPopup"; // Adjust path if needed
+import BuyButton from "./BuyButton"; // Adjust the path if needed
+import VideoViewPopup from "../../components/VideoViewPopup"; // Adjust the path if needed
 import { supabase } from "@/lib/supabaseClient";
 
 interface Course {
@@ -17,7 +17,8 @@ interface Course {
   course_includes?: string;
 }
 
-interface LessonData {
+// Exporting the interface helps ensure it’s recognized
+export interface LessonData {
   video_url: string;
 }
 
