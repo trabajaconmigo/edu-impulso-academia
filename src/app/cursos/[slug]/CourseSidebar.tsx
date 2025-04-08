@@ -2,7 +2,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import styles from "./CourseSidebar.module.css";
 import BuyButton from "./BuyButton"; // Adjust the path if needed
 import VideoViewPopup from "../../components/VideoViewPopup"; // Adjust the path if needed
@@ -29,6 +29,7 @@ export default function CourseSidebar({ course }: CourseSidebarProps) {
   const [showPopup, setShowPopup] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
+  // Function to fetch the preview video URL
   const openVideo = async () => {
     try {
       console.log("Fetching preview video for course ID:", course.id);
@@ -49,11 +50,16 @@ export default function CourseSidebar({ course }: CourseSidebarProps) {
       }
       setPreviewUrl(data.video_url);
       setShowPopup(true);
-    } catch (err: any) {
-      console.error("Error fetching preview video:", err.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        console.error("Error fetching preview video:", err.message);
+      } else {
+        console.error("Error fetching preview video: unexpected error");
+      }
     }
   };
 
+  // Calculate original price if a discount exists.
   const originalPrice = course.discount
     ? (course.price / (1 - course.discount)).toFixed(2)
     : null;
