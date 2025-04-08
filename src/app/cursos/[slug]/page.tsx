@@ -21,6 +21,7 @@ interface Course {
   price: number; // Required for dynamic BuyButton
 }
 
+
 export default async function CoursePage({
   params,
 }: {
