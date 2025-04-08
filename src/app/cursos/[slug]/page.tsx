@@ -1,10 +1,27 @@
+// /src/app/cursos/[slug]/page.tsx
+
 import { notFound } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import Hero from "./Hero";
-import StaticSection from "./StaticSection";
+import Hero from "./Hero";                 
+import StaticSection from "./StaticSection"; // Now dynamic!
 import WhiteBoxSection from "./WhiteBoxSection";
 import CourseSidebar from "./CourseSidebar";
 import styles from "./page.module.css";
+
+interface Course {
+  id: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  thumbnail_url: string;
+  slug: string;
+  what_you_ll_learn: string;
+  student_count: number;
+  created_by: string;
+  last_updated: string;
+  language: string;
+  price: number; // Required for dynamic BuyButton
+}
 
 export default async function CoursePage({
   params,
@@ -36,6 +53,7 @@ export default async function CoursePage({
         </div>
 
         <div className={styles.sidebarColumn}>
+          {/* ✅ Pass full course object including price */}
           <CourseSidebar course={course} />
         </div>
       </div>
