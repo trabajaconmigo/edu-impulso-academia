@@ -6,7 +6,6 @@ import WhiteBoxSection from "./WhiteBoxSection";
 import CourseSidebar from "./CourseSidebar";
 import styles from "./page.module.css";
 
-// We actually use this interface (casting our DB response to it)
 interface Course {
   id: string;
   title: string;
@@ -19,15 +18,12 @@ interface Course {
   created_by: string;
   last_updated: string;
   language: string;
-  price: number; // For dynamic BuyButton
+  price: number; // For BuyButton
 }
 
-export default async function CoursePage({
-  params,
-}: {
-  params: { slug: string };
-}) {
-  const { slug } = params;
+export default async function CoursePage(props: any) {
+  // "props.params" is how Next passes route segments
+  const { slug } = props.params;
 
   // Fetch course data from Supabase
   const { data, error } = await supabase
@@ -41,7 +37,7 @@ export default async function CoursePage({
     return notFound();
   }
 
-  // Typecast the returned data so we 'use' the Course interface
+  // Typecast so we "use" the Course interface
   const course = data as Course;
 
   return (
@@ -53,9 +49,7 @@ export default async function CoursePage({
           <StaticSection whatYoullLearn={course.what_you_ll_learn} />
           <WhiteBoxSection slug={slug} />
         </div>
-
         <div className={styles.sidebarColumn}>
-          {/* Pass full course object including price */}
           <CourseSidebar course={course} />
         </div>
       </div>
