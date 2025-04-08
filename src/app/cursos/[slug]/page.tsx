@@ -1,17 +1,11 @@
-// src/app/cursos/[slug]/page.tsx
-
-"use client"; 
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 import { notFound } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import Hero from "./Hero";
+import Hero from "./Hero";                 
 import StaticSection from "./StaticSection"; // Now dynamic!
 import WhiteBoxSection from "./WhiteBoxSection";
 import CourseSidebar from "./CourseSidebar";
 import styles from "./page.module.css";
 
-// This interface is used only for type checking the data from Supabase.
 interface Course {
   id: string;
   title: string;
@@ -57,6 +51,7 @@ export default async function CoursePage({
         </div>
 
         <div className={styles.sidebarColumn}>
+          {/* ✅ Pass full course object including price */}
           <CourseSidebar course={course} />
         </div>
       </div>

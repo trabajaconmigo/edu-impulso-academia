@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import styles from "./coursesListing.module.css";
+
 interface Course {
   id: string;
   title: string;

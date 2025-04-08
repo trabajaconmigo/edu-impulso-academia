@@ -1,12 +1,11 @@
 // src/app/cursos/[slug]/CourseSidebar.tsx
 
 "use client";
-/* eslint-disable @next/next/no-img-element */
 
 import React, { useState } from "react";
 import styles from "./CourseSidebar.module.css";
 import BuyButton from "./BuyButton"; // Adjust the path if needed
-import VideoViewPopup from "../../components/VideoViewPopup"; // Adjust the path if needed
+import VideoViewPopup from "../../components/VideoViewPopup"; // Adjust path if needed
 import { supabase } from "@/lib/supabaseClient";
 
 interface Course {
@@ -16,11 +15,7 @@ interface Course {
   thumbnail_url: string;
   discount?: number;
   course_includes?: string;
-  preview_video?: string; // New column added to "courses"
-}
-
-interface LessonData {
-  video_url: string;
+  preview_video?: string;  // New property fetched from the courses table
 }
 
 interface CourseSidebarProps {
@@ -29,16 +24,14 @@ interface CourseSidebarProps {
 
 export default function CourseSidebar({ course }: CourseSidebarProps) {
   const [showPopup, setShowPopup] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  // Since we are now using the "courses" table only, we can check the preview_video there.
-  const openVideo = async () => {
-    // If the course already has the preview video URL, open the popup
+  // Function to open the video preview popup.
+  // Since we now store preview_video in the courses table, we simply check for it.
+  const openVideo = () => {
     if (course.preview_video) {
-      setPreviewUrl(course.preview_video);
       setShowPopup(true);
     } else {
-      console.error("No preview video available for this course");
+      console.error("No preview video available");
     }
   };
 
@@ -74,9 +67,7 @@ export default function CourseSidebar({ course }: CourseSidebarProps) {
             <div className={styles.timer}>¡Oferta termina en 4 horas!</div>
           </>
         )}
-        <div className={styles.guarantee}>
-          Garantía de devolución de 30 días
-        </div>
+        <div className={styles.guarantee}>Garantía de devolución de 30 días</div>
       </div>
 
       {/* Botón de compra */}
@@ -93,8 +84,11 @@ export default function CourseSidebar({ course }: CourseSidebarProps) {
       )}
 
       {/* Popup para la vista previa del video */}
-      {showPopup && previewUrl && (
-        <VideoViewPopup videoUrl={previewUrl} onClose={() => setShowPopup(false)} />
+      {showPopup && course.preview_video && (
+        <VideoViewPopup
+          videoUrl={course.preview_video}
+          onClose={() => setShowPopup(false)}
+        />
       )}
     </div>
   );
