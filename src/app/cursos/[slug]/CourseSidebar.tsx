@@ -5,7 +5,7 @@
 import React, { useState } from "react";
 import styles from "./CourseSidebar.module.css";
 import BuyButton from "./BuyButton"; // Adjust the path if needed
-import VideoViewPopup from "../../components/VideoViewPopup"; // Adjust the path if needed
+import VideoViewPopup from "../../components/VideoViewPopup"; // Adjust path if needed
 import { supabase } from "@/lib/supabaseClient";
 
 interface Course {
@@ -15,11 +15,7 @@ interface Course {
   thumbnail_url: string;
   discount?: number;
   course_includes?: string;
-}
-
-// Exporting the interface helps ensure it’s recognized
-export interface LessonData {
-  video_url: string;
+  preview_video?: string;  // New property fetched from the courses table
 }
 
 interface CourseSidebarProps {
@@ -28,35 +24,14 @@ interface CourseSidebarProps {
 
 export default function CourseSidebar({ course }: CourseSidebarProps) {
   const [showPopup, setShowPopup] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   // Function to open the video preview popup.
-  const openVideo = async () => {
-    try {
-      console.log("Fetching preview video for course ID:", course.id);
-      const { data, error } = await supabase
-        .from<LessonData>("lessons")
-        .select("video_url")
-        .eq("course_id", course.id)
-        .eq("preview_video", true)
-        .order("lesson_order", { ascending: true })
-        .limit(1)
-        .maybeSingle();
-
-      console.log("Resultado de lessons:", { data, error });
-
-      if (error || !data) {
-        console.error("Error fetching preview video:", error || "No data returned");
-        return;
-      }
-      setPreviewUrl(data.video_url);
+  // Since we now store preview_video in the courses table, we simply check for it.
+  const openVideo = () => {
+    if (course.preview_video) {
       setShowPopup(true);
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        console.error("Error fetching preview video:", err.message);
-      } else {
-        console.error("Error fetching preview video: unexpected error");
-      }
+    } else {
+      console.error("No preview video available");
     }
   };
 
@@ -92,9 +67,7 @@ export default function CourseSidebar({ course }: CourseSidebarProps) {
             <div className={styles.timer}>¡Oferta termina en 4 horas!</div>
           </>
         )}
-        <div className={styles.guarantee}>
-          Garantía de devolución de 30 días
-        </div>
+        <div className={styles.guarantee}>Garantía de devolución de 30 días</div>
       </div>
 
       {/* Botón de compra */}
@@ -111,8 +84,11 @@ export default function CourseSidebar({ course }: CourseSidebarProps) {
       )}
 
       {/* Popup para la vista previa del video */}
-      {showPopup && previewUrl && (
-        <VideoViewPopup videoUrl={previewUrl} onClose={() => setShowPopup(false)} />
+      {showPopup && course.preview_video && (
+        <VideoViewPopup
+          videoUrl={course.preview_video}
+          onClose={() => setShowPopup(false)}
+        />
       )}
     </div>
   );

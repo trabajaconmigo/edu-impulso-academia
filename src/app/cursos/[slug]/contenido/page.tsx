@@ -1,5 +1,6 @@
+// src/app/cursos/[slug]/contenido/page.tsx
+
 import Link from "next/link";
-import { supabase } from "@/lib/supabaseClient";
 import styles from "./courseContent.module.css";
 
 interface Lesson {
@@ -13,10 +14,12 @@ interface CourseContentProps {
   params: { slug: string };
 }
 
-export default async function CourseContentPage({ params }: CourseContentProps) {
+export default async function CourseContentPage({
+  params,
+}: CourseContentProps) {
   const { slug } = params;
-  // Here you would fetch the course lessons/content from Supabase
-  // For demonstration, using static data:
+  
+  // For demonstration purposes, using static data.
   const lessons: Lesson[] = [
     { id: "1", title: "Introducción", content: "Contenido de la lección 1" },
     { id: "2", title: "Conceptos Básicos", content: "Contenido de la lección 2" },
