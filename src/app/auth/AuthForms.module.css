@@ -1,21 +1,23 @@
-/* app/(auth)/AuthForms.module.css (example path) */
+/* app/(auth)/AuthForms.module.css */
 
-/* Contenedor general */
+/* Global wrapper: align content at top and center horizontally */
 .pageWrapper {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  justify-content: center;
+  justify-content: flex-start;  /* not centered vertically */
+  align-items: center;
+  padding-top: 5vh; /* adjust this value to move content up as needed */
 }
 
-/* Login container: centered, with a dark background, rounded corners, and extra spacing */
+/* Login container: white background, rounded corners, subtle shadow, and reduced top margin */
 .loginContainer {
-  background-color: #f0f0f0;
+  background-color: #ffffff;
   padding: 40px;
   border-radius: 10px;
   max-width: 400px;
   width: 100%;
-  margin: auto; /* Center horizontally */
+  margin: 2rem auto 0 auto; /* 2rem top margin, auto horizontally, 0 bottom */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -50,7 +52,7 @@
   margin-top: 20px;
 }
 
-/* Input and textarea styling (scoped within formContainer) */
+/* Input and textarea styling */
 .formContainer input,
 .formContainer textarea {
   width: 100%;
@@ -61,9 +63,9 @@
   margin-bottom: 10px;
 }
 
-/* Login button styling */
+/* Login button styling – using the app's purple theme */
 .loginButton {
-  background-color: #cba344;
+  background-color: #a435f0; /* primary purple */
   color: #fff;
   padding: 10px;
   font-size: 1rem;
@@ -74,7 +76,7 @@
 }
 
 .loginButton:hover {
-  background-color: #b28e38;
+  background-color: #922ec7; /* slightly darker purple */
 }
 
 /* Error message styling */
