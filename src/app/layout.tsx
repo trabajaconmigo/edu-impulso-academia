@@ -1,7 +1,8 @@
 // src/app/layout.tsx
+
 import { Metadata } from "next";
-import "./globals.css";
-import styles from "./layout.module.css";
+import "./globals.css";          // <-- Global styles
+import styles from "./layout.module.css"; // local layout module if needed
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import { Playfair_Display, Open_Sans } from "next/font/google";
@@ -31,6 +32,7 @@ export default function RootLayout({
   return (
     <html lang="es" className={`${playfair.variable} ${openSans.variable}`}>
       <body className={styles.bodyLayout}>
+        {/* Navbar on every page */}
         <Navbar />
         <main className={styles.mainContent}>{children}</main>
         <Footer />

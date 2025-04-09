@@ -1,3 +1,5 @@
+/* Navbar.module.css */
+
 /* The fixed navbar container */
 .eduNavbar {
   position: fixed;
@@ -168,13 +170,6 @@
   border: none;
   border-top: 1px solid #ddd;
   margin: 8px 0;
-}
-
-/* Content space below navbar so it doesn't overlap */
-body {
-  margin: 0;
-  padding-top: 60px; 
-  box-sizing: border-box;
 }
 
 /* Media Query: Hide center links on mobile & show hamburger icon */
