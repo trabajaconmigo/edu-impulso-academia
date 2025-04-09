@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import Image from "next/image"; // ← Replaces <img>
+import Image from "next/image";
 import styles from "./CourseSidebar.module.css";
 import BuyButton from "./BuyButton";
 import VideoViewPopup from "../../components/VideoViewPopup";
@@ -12,7 +12,7 @@ interface Course {
   price: number;
   thumbnail_url: string;
   discount?: number;
-  course_includes?: string;
+  course_includes?: string; // HTML containing custom icons and text
   preview_video?: string;
 }
 
@@ -37,14 +37,14 @@ export default function CourseSidebar({ course }: CourseSidebarProps) {
 
   return (
     <div className={styles.sidebar}>
-      {/* Imagen del curso y botón para reproducir la vista previa */}
+      {/* Course Thumbnail + Preview Button */}
       <div className={styles.courseImage}>
         <Image
           src={course.thumbnail_url}
           alt={course.title}
           width={600}
           height={400}
-          className={styles.someImageClass} // optional, to style it
+          className={styles.someImageClass}
         />
         <div className={styles.playButton} onClick={openVideo}>
           <svg viewBox="0 0 24 24">
@@ -54,14 +54,13 @@ export default function CourseSidebar({ course }: CourseSidebarProps) {
         </div>
       </div>
 
-      {/* Sección de precios y oferta */}
+      {/* Price & Discount Section */}
       <div className={styles.priceSection}>
         <div className={styles.currentPrice}>MX${course.price.toFixed(2)}</div>
         {originalPrice && (
           <>
             <div className={styles.originalPrice}>
-              Precio Original: MX$
-              {parseFloat(originalPrice).toFixed(2)}
+              Precio Original: MX${parseFloat(originalPrice).toFixed(2)}
             </div>
             <div className={styles.discount}>
               {Math.round((course.discount || 0) * 100)}% de descuento
@@ -69,25 +68,25 @@ export default function CourseSidebar({ course }: CourseSidebarProps) {
             <div className={styles.timer}>¡Oferta termina en 4 horas!</div>
           </>
         )}
-        <div className={styles.guarantee}>
-          Garantía de devolución de 30 días
-        </div>
+        <div className={styles.guarantee}>Garantía de devolución de 30 días</div>
       </div>
 
-      {/* Botón de compra */}
+      {/* Buy Button */}
       <div className={styles.buyButton}>
         <BuyButton course={course} />
       </div>
 
-      {/* Sección de características del curso (contenido HTML dinámico) */}
+      {/* "Este curso incluye:" Section */}
       {course.course_includes && (
         <div className={styles.courseIncludes}>
           <h4>Este curso incluye:</h4>
-          <div dangerouslySetInnerHTML={{ __html: course.course_includes }} />
+          <div
+            dangerouslySetInnerHTML={{ __html: course.course_includes }}
+          />
         </div>
       )}
 
-      {/* Popup para la vista previa del video */}
+      {/* Video Popup */}
       {showPopup && course.preview_video && (
         <VideoViewPopup
           videoUrl={course.preview_video}

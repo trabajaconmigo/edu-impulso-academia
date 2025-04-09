@@ -2,7 +2,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-
+import styles from "./BuyButton.module.css";
 interface BuyButtonProps {
   course: {
     id: string;
@@ -21,5 +21,6 @@ export default function BuyButton({ course }: BuyButtonProps) {
     router.push(`/checkout?courseId=${course.id}&amount=${amount}`);
   };
 
-  return <button onClick={handleBuy}>Comprar Curso</button>;
+  return <button className={styles.buyButton} onClick={handleBuy}>Comprar Curso</button>;
+ 
 }

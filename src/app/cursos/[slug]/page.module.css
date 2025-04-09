@@ -1,21 +1,21 @@
-/* The main container below the hero, 1200px wide, side by side with a left column and a sidebar */
+/* Main container below the hero */
 .mainContainer {
   max-width: 1200px;
   margin: 2rem auto;
   padding: 0 1rem;
   display: flex;
-  gap: 2rem;
   flex-direction: column;
+  gap: 2rem;
 }
 
 @media (min-width: 768px) {
   .mainContainer {
     flex-direction: row;
-    align-items: flex-start;
+    align-items: flex-start; /* Ensures the sidebar can stick/fix */
   }
 }
 
-/* The left column with StaticSection + WhiteBoxSection stacked */
+/* Left column: for static sections, etc. */
 .leftColumn {
   flex: 1;
   display: flex;
@@ -23,7 +23,54 @@
   gap: 2rem;
 }
 
-/* The right column for the sidebar */
+/* Sidebar column: reserve space for the sidebar */
+.sidebarColumn {
+  width: 350px;
+  flex-shrink: 0;
+  /* Do not force any overflow here—leave it for the sidebar styling below */
+}
+/* Main container below the hero */
+.mainContainer {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Mobile: reordering columns so sidebar appears immediately after the hero */
+@media (max-width: 767px) {
+  .sidebarColumn {
+    order: 1;  /* Sidebar appears first in the column layout on mobile */
+  }
+  .leftColumn {
+    order: 2;
+  }
+}
+
+/* Tablet and up: side-by-side with natural order */
+@media (min-width: 768px) {
+  .mainContainer {
+    flex-direction: row;
+    align-items: flex-start; /* So sidebar can stick/fix properly later */
+  }
+  /* Reset order */
+  .leftColumn,
+  .sidebarColumn {
+    order: 0;
+  }
+}
+
+/* The left column: holds content (StaticSection, WhiteBoxSection, etc.) */
+.leftColumn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* The sidebar column: fixed width, no shrinking */
 .sidebarColumn {
   width: 350px;
   flex-shrink: 0;

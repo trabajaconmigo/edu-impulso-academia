@@ -1,27 +1,50 @@
-/* CourseSidebar.module.css */
-
+/* Sidebar wrapper */
 .sidebar {
   background-color: #fff;
   border: 1px solid #d1d7dc;
   border-radius: 8px;
   padding: 1.5rem;
-  max-width: 350px;
-  width: 100%;
+  width: 350px;
   box-sizing: border-box;
   color: #1c1d1f;
-  max-height: 1000px; /* Added max-height to limit sidebar height */
+  position: relative;
+  margin: 0 auto; /* Center for mobile */
+  margin-top: 55px;
+  /* Subtle shade glow */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Desktop styles */
-@media (min-width: 768px) {
+/* MOBILE ADJUSTMENTS: (up to 767px)
+   Make the sidebar fill available width with some margin,
+   and ensure it is centered and locked (no horizontal scroll)
+*/
+@media (max-width: 767px) {
   .sidebar {
-    position: fixed;
-    top: 100px;
-    right: calc((100% - 1200px) / 2);
-    max-height: 1000px; /* Adjusted max-height for desktop */
-    overflow-y: auto; /* Added overflow-y for scrolling content */
+    width: calc(100% - 20px); /* full width minus a 10px margin each side */
+    max-width: calc(100% - 20px);
+    margin: 0 auto;
+    left: -18;
+    right: 0;
+    overflow-x: hidden;
   }
 }
+
+/* DESKTOP FIXED SIDEBAR:
+   When screen is wide (1366px and above), fix the sidebar 35px from the top.
+   Adjust right offset so it aligns with the centered 1200px container.
+*/
+@media (min-width: 1366px) {
+  .sidebar {
+    position: fixed;
+    top: 35px;  /* fixed at 35px from top */
+    right: calc((100% - 1200px) / 2);
+    width: 350px;
+    max-height: calc(100vh - 35px); /* Allow vertical scrolling if needed */
+    overflow-y: auto;
+  }
+}
+
+/* Sidebar inner elements remain as before */
 
 /* Course Image and Play Button */
 .courseImage {
@@ -29,7 +52,7 @@
   margin-bottom: 1rem;
 }
 
-.courseImage img {
+.someImageClass {
   width: 100%;
   height: auto;
   border-radius: 8px;
@@ -63,7 +86,7 @@
   text-align: center;
 }
 
-/* Price and Discount Section */
+/* Price & Discount Section */
 .priceSection {
   text-align: center;
   margin-bottom: 1rem;
@@ -99,7 +122,17 @@
   color: #5cb85c;
 }
 
-/* Course Includes Section */
+/* Buy Button Container */
+.buyButton {
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+/* "Este curso incluye:" section */
+.courseIncludes {
+  margin-top: 1rem;
+}
+
 .courseIncludes h4 {
   margin-bottom: 0.5rem;
 }
@@ -110,38 +143,17 @@
   margin: 0;
 }
 
+/* Place icons and text in the same row with smaller sizing */
 .courseIncludes li {
-  margin-bottom: 0.3rem;
-  padding-left: 1rem;
-  position: relative;
+  display: flex;
+  align-items: center;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
 }
 
-.courseIncludes li::before {
-  content: "✔";
-  position: absolute;
-  left: 0;
-  color: #a435f0;
-  font-size: 0.9rem;
-}
-
-/* Buy Button */
-.buyButton {
-  text-align: center;
-  margin-top: 1rem;
-}
-
-.buyButton button {
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  font-weight: bold;
-  color: #fff;
-  background-color: #a435f0;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.buyButton button:hover {
-  background-color: #7c0b8e;
+.courseIncludes li img {
+  width: 20px;
+  height: 20px;
+  margin-right: 6px;
+  object-fit: contain;
 }
