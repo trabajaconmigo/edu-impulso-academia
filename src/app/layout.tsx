@@ -1,5 +1,3 @@
-// src/app/layout.tsx
-
 import { Metadata } from "next";
 import "./globals.css";          // <-- Global styles
 import styles from "./layout.module.css"; // local layout module if needed

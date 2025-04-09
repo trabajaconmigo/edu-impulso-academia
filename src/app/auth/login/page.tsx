@@ -3,8 +3,7 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import styles from "../AuthForms.module.css"; 
-// ^ If your CSS module is in a different folder, update this path accordingly
+import styles from "../AuthForms.module.css"; // Update path if needed
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -16,21 +15,18 @@ export default function LoginPage() {
     e.preventDefault();
     setErrorMsg("");
 
-    // Use the Supabase auth client to sign in with email/password
+    // Sign in using email & password
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       setErrorMsg(error.message);
     } else {
-      // On success, push user to /perfil
-      router.push("/perfil");
+      // Force full page reload so the Navbar immediately shows the logged in state.
+      window.location.href = "/perfil";
     }
   }
 
   async function handleGoogleLogin() {
     setErrorMsg("");
-
-    // Determine the correct redirect URL based on environment
-    // If you ONLY want to use the production domain, you can omit the logic and hardcode it.
     const redirectURL =
       process.env.NODE_ENV === "development"
         ? "http://localhost:3000/perfil"

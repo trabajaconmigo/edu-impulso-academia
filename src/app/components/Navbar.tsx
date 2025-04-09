@@ -23,8 +23,7 @@ export default function EduNavbar() {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const [user, setUser] = useState<EduNavbarUser | null>(null);
-  const [menuOpen, setMenuOpen] = useState(false);         // toggles the sidebar
-  const [mobileMenuIcon, setMobileMenuIcon] = useState(false); // toggles hamburger icon state
+  const [menuOpen, setMenuOpen] = useState(false); // toggles the sidebar
 
   // On mount => check session + fetch profile
   useEffect(() => {
@@ -83,7 +82,9 @@ export default function EduNavbar() {
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, [menuOpen]);
 
   async function handleLogout() {
@@ -102,7 +103,7 @@ export default function EduNavbar() {
         </Link>
       </div>
 
-      {/* Center: "Cursos" & "Concejos" (hidden on mobile / iPad vertical) */}
+      {/* Center: "Cursos" & "Concejos" (hidden on mobile) */}
       <div className={styles.navCenter}>
         <Link href="/cursos" className={styles.centerLink}>
           Cursos
@@ -114,14 +115,24 @@ export default function EduNavbar() {
 
       {/* Right side */}
       <div className={styles.navRight}>
-        {/* If user is not logged => "Iniciar Sesión" */}
+        {/* If user is not logged => "Iniciar Sesión" AND show hamburger */}
         {!user && (
-          <Link href="/auth/login" className={styles.loginButton}>
-            Iniciar Sesión
-          </Link>
+          <>
+            <Link href="/auth/login" className={styles.loginButton}>
+              Iniciar Sesión
+            </Link>
+            {/* Only show hamburger on mobile if user not logged */}
+            <button
+              className={styles.mobileMenuIcon}
+              onClick={() => setMenuOpen((prev) => !prev)}
+              aria-label="Toggle Menu"
+            >
+              {menuOpen ? <FaTimes /> : <FaBars />}
+            </button>
+          </>
         )}
 
-        {/* If user is logged => show user image */}
+        {/* If user is logged => show user image (toggles sidebar), no hamburger */}
         {user && (
           <button
             className={styles.profileBtn}
@@ -135,15 +146,6 @@ export default function EduNavbar() {
             />
           </button>
         )}
-
-        {/* Mobile menu icon => shows on small screens => toggle sidebar */}
-        <button
-          className={styles.mobileMenuIcon}
-          onClick={() => setMenuOpen((prev) => !prev)}
-          aria-label="Toggle Menu"
-        >
-          {menuOpen ? <FaTimes /> : <FaBars />}
-        </button>
       </div>
 
       {/* Right drawer overlay */}
@@ -181,7 +183,7 @@ export default function EduNavbar() {
             </div>
 
             <div className={styles.drawerMenu}>
-              {/* "Cursos" & "Concejos" show in the drawer for mobile */}
+              {/* "Cursos" & "Concejos" in the drawer */}
               <Link
                 href="/cursos"
                 className={styles.drawerItem}
