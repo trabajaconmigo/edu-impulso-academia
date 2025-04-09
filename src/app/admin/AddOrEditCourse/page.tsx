@@ -4,7 +4,8 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { COURSE_CATEGORIES } from "@/app/components/courseCategories";
-import styles from "./AddOrEditCourse.module.css";
+import styles from "./styles/AddOrEditCourse.module.css";
+
 
 /** 
  * Predefined icons for the "Este curso incluye" features (unchanged).
@@ -20,7 +21,7 @@ const PREDEFINED_FEATURE_ICONS = [
   },
   {
     label: "Ícono de Tareas",
-    url: "https://your-supabase-url/icons/tasks-icon.png",
+    url: "https://rvinrzxeetertylulqkx.supabase.co/storage/v1/object/public/courseimg//certificate-icon.png",
   },
   {
     label: "Ícono de Dispositivos",
