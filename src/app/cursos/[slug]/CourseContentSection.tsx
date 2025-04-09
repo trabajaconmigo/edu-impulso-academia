@@ -14,11 +14,29 @@ interface CourseContent {
   duration?: number; // in seconds
   order_index: number;
   parent_section_id?: number | null;
+  paid?: boolean; // bool field from your DB indicating if the lecture is paid
 }
 
 interface CourseContentSectionProps {
   course_id: string;
 }
+
+/** Inline SVG lock icon in gray (#999). Adjust size as needed. */
+const LOCK_ICON = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="#999"      // The fill color is gray
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      fillRule="evenodd"
+      clipRule="evenodd"
+      d="M12 2C9.23858 2 7 4.23858 7 7V9H6C4.34315 9 3 10.3431 3 12V20C3 21.6569 4.34315 23 6 23H18C19.6569 23 21 21.6569 21 20V12C21 10.3431 19.6569 9 18 9H17V7C17 4.23858 14.7614 2 12 2ZM15 9V7C15 5.34315 13.6569 4 12 4C10.3431 4 9 5.34315 9 7V9H15ZM8 14C7.44772 14 7 14.4477 7 15V17C7 17.5523 7.44772 18 8 18H16C16.5523 18 17 17.5523 17 17V15C17 14.4477 16.5523 14 16 14H8Z"
+    />
+  </svg>
+);
 
 const CourseContentSection: React.FC<CourseContentSectionProps> = ({ course_id }) => {
   const [contents, setContents] = useState<CourseContent[]>([]);
@@ -29,6 +47,9 @@ const CourseContentSection: React.FC<CourseContentSectionProps> = ({ course_id }
     totalLectures: 0,
     totalDuration: 0, // in seconds
   });
+
+  // Whether current user purchased this course
+  const [hasPurchase, setHasPurchase] = useState<boolean>(false);
 
   useEffect(() => {
     async function fetchContent() {
@@ -55,7 +76,35 @@ const CourseContentSection: React.FC<CourseContentSectionProps> = ({ course_id }
         setContents(contentData);
       }
     }
+
+    async function checkPurchase() {
+      // 1) Get current user
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        // 2) Check if there's a purchase row for this user & course
+        const { data: purchaseData, error: purchaseError } = await supabase
+          .from("purchases")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("course_id", course_id)
+          .single();
+
+        if (!purchaseError && purchaseData) {
+          setHasPurchase(true);
+        } else {
+          setHasPurchase(false);
+        }
+      } else {
+        // user not logged in => no purchase
+        setHasPurchase(false);
+      }
+    }
+
     fetchContent();
+    checkPurchase();
   }, [course_id]);
 
   // Helper to format seconds as "Xh Ym"
@@ -72,24 +121,47 @@ const CourseContentSection: React.FC<CourseContentSectionProps> = ({ course_id }
   const getLecturesForSection = (sectionId: number) =>
     contents.filter((item) => item.type === "lecture" && item.parent_section_id === sectionId);
 
-  // Toggle expanded state for a section – allow multiple open sections
+  // Expand/collapse logic
   const toggleSection = (sectionId: number) => {
     setExpandedSections((prev) => {
       if (prev.includes(sectionId)) {
-        // Remove sectionId if already expanded
         return prev.filter((id) => id !== sectionId);
       } else {
-        // Add sectionId to expanded list
         return [...prev, sectionId];
       }
     });
   };
 
+  function handleLectureClick(lecture: CourseContent) {
+    // If paid & no purchase => block
+    if (lecture.paid && !hasPurchase) {
+      alert("Este contenido es de pago. Por favor compra el curso para acceder.");
+      return;
+    }
+    // Otherwise open video
+    if (lecture.youtube_link) {
+      setPopupVideo(lecture.youtube_link);
+    }
+  }
+
+  // Render an inline SVG lock icon only if paid + no purchase
+  function renderLockIcon(lecture: CourseContent) {
+    if (lecture.paid && !hasPurchase) {
+      return (
+        <span style={{ marginLeft: "6px", display: "inline-flex", alignItems: "center" }}>
+          {LOCK_ICON}
+        </span>
+      );
+    }
+    return null; // no icon for free or purchased
+  }
+
   return (
     <div className={styles.courseContentWrapper}>
       <h2 className={styles.sectionHeader}>Contenido del curso</h2>
       <p className={styles.summary}>
-        {summary.totalSections} secciones • {summary.totalLectures} lecciones • {formatDuration(summary.totalDuration)} de duración total
+        {summary.totalSections} secciones • {summary.totalLectures} lecciones •{" "}
+        {formatDuration(summary.totalDuration)} de duración total
       </p>
       <div className={styles.accordion}>
         {sections.map((section) => (
@@ -100,7 +172,9 @@ const CourseContentSection: React.FC<CourseContentSectionProps> = ({ course_id }
             >
               <span>{section.title}</span>
               <span
-                className={`${styles.dropdownIcon} ${expandedSections.includes(section.id) ? styles.expanded : ""}`}
+                className={`${styles.dropdownIcon} ${
+                  expandedSections.includes(section.id) ? styles.expanded : ""
+                }`}
               >
                 <svg width="16" height="16" viewBox="0 0 16 16">
                   <path d="M4 6l4 4 4-4H4z" fill="currentColor" />
@@ -113,11 +187,12 @@ const CourseContentSection: React.FC<CourseContentSectionProps> = ({ course_id }
                   <div
                     key={lecture.id}
                     className={styles.lectureItem}
-                    onClick={() =>
-                      lecture.youtube_link && setPopupVideo(lecture.youtube_link)
-                    }
+                    onClick={() => handleLectureClick(lecture)}
                   >
-                    <span>{lecture.title}</span>
+                    <span>
+                      {lecture.title}
+                      {renderLockIcon(lecture)}
+                    </span>
                     <span className={styles.lectureDuration}>
                       {lecture.duration ? formatDuration(lecture.duration) : ""}
                     </span>
@@ -128,6 +203,7 @@ const CourseContentSection: React.FC<CourseContentSectionProps> = ({ course_id }
           </div>
         ))}
       </div>
+
       {popupVideo && (
         <VideoViewPopup
           videoUrl={popupVideo}

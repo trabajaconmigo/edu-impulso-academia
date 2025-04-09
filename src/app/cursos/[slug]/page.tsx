@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import Hero from "./Hero";
 import StaticSection from "./StaticSection";
-import WhiteBoxSection from "./WhiteBoxSection";
+
 import CourseContentSection from "./CourseContentSection"; // New dynamic course content section
 import CourseSidebar from "./CourseSidebar";
 import styles from "./page.module.css";
