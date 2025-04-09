@@ -4,67 +4,46 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import {
-  FaUser,
-  FaSignOutAlt,
-  FaSignInAlt,
-  FaUserPlus,
-  FaBars,
-  FaTimes,
-} from "react-icons/fa";
+import { FaUser, FaSignOutAlt, FaSignInAlt, FaUserPlus, FaBars, FaTimes } from "react-icons/fa";
 import styles from "./Navbar.module.css";
 
 interface ProfileData {
   full_name?: string;
-  profile_img?: string | null;  // stored in "profiles" table
+  profile_img?: string | null; // from "profiles" table
 }
 
 interface EduNavbarUser {
   email?: string | null;
-  name?: string;   // e.g. from full_name or fallback
-  photo?: string;  // final photo url
-  // Additional fields if desired
+  name?: string; // e.g. from full_name or fallback to email
+  photo?: string; // final photo url
 }
 
 export default function EduNavbar() {
   const router = useRouter();
-
-  const [user, setUser] = useState<EduNavbarUser | null>(null);
-  const [menuOpen, setMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close the drawer if clicking outside
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (
-        menuOpen &&
-        dropdownRef.current &&
-        !dropdownRef.current.contains(e.target as Node)
-      ) {
-        setMenuOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [menuOpen]);
+  const [user, setUser] = useState<EduNavbarUser | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);         // toggles the sidebar
+  const [mobileMenuIcon, setMobileMenuIcon] = useState(false); // toggles hamburger icon state
 
-  // On mount, check the session + fetch profile
+  // On mount => check session + fetch profile
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
       const session = data.session;
       if (session) {
         const userEmail = session.user.email || "";
         const userId = session.user.id;
-        // Check the 'profiles' table
+
+        // check "profiles" table
         const { data: profile, error } = await supabase
           .from("profiles")
           .select("full_name, profile_img")
           .eq("user_id", userId)
           .single();
 
-        // Decide final name
         let displayName = userEmail;
-        let photoUrl = "/favicon.ico"; // fallback
+        let photoUrl = "/favicon.ico"; // fallback if no image
+
         if (!error && profile) {
           if (profile.full_name) {
             displayName = profile.full_name;
@@ -74,7 +53,7 @@ export default function EduNavbar() {
           }
         }
 
-        // If user logged in via Google, session.user.user_metadata may hold a picture:
+        // if user logged in with Google, user_metadata might contain an avatar
         const googlePic =
           session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture;
         if (googlePic) {
@@ -92,6 +71,21 @@ export default function EduNavbar() {
     });
   }, []);
 
+  // close sidebar if user clicks outside
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (
+        menuOpen &&
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node)
+      ) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [menuOpen]);
+
   async function handleLogout() {
     await supabase.auth.signOut();
     setUser(null);
@@ -108,7 +102,7 @@ export default function EduNavbar() {
         </Link>
       </div>
 
-      {/* Center links */}
+      {/* Center: "Cursos" & "Concejos" (hidden on mobile / iPad vertical) */}
       <div className={styles.navCenter}>
         <Link href="/cursos" className={styles.centerLink}>
           Cursos
@@ -118,53 +112,46 @@ export default function EduNavbar() {
         </Link>
       </div>
 
-      {/* Right side: user stuff or login */}
+      {/* Right side */}
       <div className={styles.navRight}>
-        {user ? (
-          // Logged in => show profile image & hamburger for mobile
-          <>
-            {/* Desktop user image (clickable) */}
-            <button
-              className={styles.profileBtn}
-              onClick={() => setMenuOpen((prev) => !prev)}
-              aria-label="Abrir menú de usuario"
-            >
-              <img
-                src={user.photo || "/favicon.ico"}
-                alt="Foto de perfil"
-                className={styles.profileImage}
-              />
-            </button>
-            {/* Mobile hamburger (if you want them separate, or unify in one icon) */}
-            <button
-              className={styles.mobileMenuIcon}
-              onClick={() => setMenuOpen((prev) => !prev)}
-              aria-label="Toggle Menu"
-            >
-              {menuOpen ? <FaTimes /> : <FaBars />}
-            </button>
-          </>
-        ) : (
-          // Not logged => show Iniciar Sesion link
-          <>
-            <Link href="/auth/login" className={styles.loginButton}>
-              Iniciar Sesión
-            </Link>
-            {/* Mobile hamburger if needed */}
-            <button
-              className={styles.mobileMenuIcon}
-              onClick={() => setMenuOpen((prev) => !prev)}
-              aria-label="Toggle Menu"
-            >
-              {menuOpen ? <FaTimes /> : <FaBars />}
-            </button>
-          </>
+        {/* If user is not logged => "Iniciar Sesión" */}
+        {!user && (
+          <Link href="/auth/login" className={styles.loginButton}>
+            Iniciar Sesión
+          </Link>
         )}
+
+        {/* If user is logged => show user image */}
+        {user && (
+          <button
+            className={styles.profileBtn}
+            onClick={() => setMenuOpen((prev) => !prev)}
+            aria-label="Abrir menú de usuario"
+          >
+            <img
+              src={user.photo || "/favicon.ico"}
+              alt="Foto de perfil"
+              className={styles.profileImage}
+            />
+          </button>
+        )}
+
+        {/* Mobile menu icon => shows on small screens => toggle sidebar */}
+        <button
+          className={styles.mobileMenuIcon}
+          onClick={() => setMenuOpen((prev) => !prev)}
+          aria-label="Toggle Menu"
+        >
+          {menuOpen ? <FaTimes /> : <FaBars />}
+        </button>
       </div>
 
       {/* Right drawer overlay */}
       {menuOpen && (
-        <div className={styles.drawerOverlay} onClick={() => setMenuOpen(false)}>
+        <div
+          className={styles.drawerOverlay}
+          onClick={() => setMenuOpen(false)}
+        >
           <div
             className={styles.drawer}
             ref={dropdownRef}
@@ -194,7 +181,7 @@ export default function EduNavbar() {
             </div>
 
             <div className={styles.drawerMenu}>
-              {/* Middle links in the drawer */}
+              {/* "Cursos" & "Concejos" show in the drawer for mobile */}
               <Link
                 href="/cursos"
                 className={styles.drawerItem}
@@ -210,9 +197,10 @@ export default function EduNavbar() {
                 Concejos
               </Link>
               <hr className={styles.drawerDivider} />
+
               {user ? (
                 <>
-                  {/* Link to user profile => /perfil */}
+                  {/* Link to /perfil */}
                   <Link
                     href="/perfil"
                     className={styles.drawerItem}
