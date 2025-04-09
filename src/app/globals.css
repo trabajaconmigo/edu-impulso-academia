@@ -53,3 +53,15 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-playfair), serif;
 }
 
+/* src/app/globals.css */
+
+/* Example global reset and spacing so the fixed navbar doesn't overlap content */
+html, body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  padding-top: 60px; /* ensures content is not hidden behind navbar */
+}
