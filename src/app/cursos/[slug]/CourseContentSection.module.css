@@ -1,0 +1,83 @@
+.courseContentWrapper {
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-top: 0rem;
+  }
+  
+  .sectionHeader {
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+    color: #333;
+  }
+  
+  .summary {
+    font-size: 0.9rem;
+    color: #777;
+    margin-bottom: 1.5rem;
+  }
+  
+  /* Accordion container */
+  .accordion {
+    border-top: 1px solid #e0e0e0;
+  }
+  
+  /* Each section item */
+  .sectionItem {
+    border-bottom: 1px solid #e0e0e0;
+  }
+  
+  /* Section title button with gray background and dropdown arrow */
+  .sectionTitle {
+    width: 100%;
+    background-color: #f8f8f8;
+    border: none;
+    padding: 0.8rem 1rem;
+    text-align: left;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #333;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.3s ease;
+  }
+  
+  .sectionTitle:hover {
+    background-color: #e0e0e0;
+  }
+  
+  /* Dropdown arrow icon */
+  .dropdownIcon {
+    transition: transform 0.3s ease;
+  }
+  
+  .expanded {
+    transform: rotate(180deg);
+  }
+  
+  /* Lecture list inside a section */
+  .lectureList {
+    padding: 0.5rem 1rem;
+  }
+  
+  .lectureItem {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    font-size: 0.9rem;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+  }
+  
+  .lectureItem:last-child {
+    border-bottom: none;
+  }
+  
+  .lectureDuration {
+    color: #777;
+    white-space: nowrap;
+  }
+  

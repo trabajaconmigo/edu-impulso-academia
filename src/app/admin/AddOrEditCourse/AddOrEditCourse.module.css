@@ -1,0 +1,343 @@
+/* AddOrEditCourse.module.css */
+
+/* Page wrapper */
+.wrapper {
+  max-width: 1000px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.backAdminBtn {
+  background-color: #6c757d;
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-bottom: 1rem;
+}
+
+.backAdminBtn:hover {
+  background-color: #5a6268;
+}
+
+.pageTitle {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  text-align: center;
+  color: #333;
+}
+
+.formArea {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.card {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+}
+
+.cardTitle {
+  font-size: 1.3rem;
+  margin-bottom: 1rem;
+  color: #444;
+}
+
+/* Generic field groups */
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1.2rem;
+}
+.fieldGroup label {
+  font-weight: 500;
+  margin-bottom: 0.3rem;
+  color: #555;
+}
+
+.fieldRow {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+}
+.fieldCol {
+  display: flex;
+  flex-direction: column;
+}
+.fieldCol label {
+  font-weight: 500;
+  margin-bottom: 0.3rem;
+  color: #555;
+}
+
+/* Input/Select/Textarea styling within .formArea */
+.formArea input[type="text"],
+.formArea input[type="number"],
+.formArea textarea,
+.formArea select {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 0.6rem;
+  font-size: 0.95rem;
+  color: #333;
+  outline: none;
+  width: 100%; /* ensure wide inputs by default */
+}
+
+.formArea input:focus,
+.formArea textarea:focus,
+.formArea select:focus {
+  border-color: #999;
+}
+
+/* For your new "Subir Imagen" button – more prominent */
+.uploadBtn {
+  background-color: #0d6efd;
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.9rem;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: background-color 0.3s ease;
+}
+.uploadBtn:hover {
+  background-color: #0b5ed7;
+}
+
+/* For "Lo que aprenderás" multiple bullet points */
+.learningRow {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+}
+.learningRow label {
+  font-weight: 500;
+  margin-bottom: 0.3rem;
+  color: #555;
+}
+.learningRow input {
+  /* Make these extra wide and spaced */
+  width: 100%;
+  min-width: 300px;
+  padding: 0.6rem;
+  margin-bottom: 0.3rem;
+}
+
+/* For the sections & lessons */
+.sectionCard {
+  background-color: #f9f9f9;
+  border: 1px solid #ccc;
+  padding: 1rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.lessonsWrapper {
+  margin-top: 1rem;
+  border-top: 1px solid #ddd;
+  padding-top: 1rem;
+}
+
+.lessonCard {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.lessonGrid {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.durationRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.checkRow {
+  margin-bottom: 1rem;
+}
+
+/* Feature row for "Este curso incluye" */
+.featureRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.featureCol {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.featureCol label {
+  font-weight: 500;
+  margin-bottom: 0.3rem;
+  color: #555;
+}
+
+/* Buttons */
+.removeBtn {
+  background-color: #fff;
+  color: #d9534f;
+  border: 1px solid #d9534f;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  transition: background-color 0.3s ease;
+}
+
+.removeBtn:hover {
+  background-color: #d9534f;
+  color: #fff;
+}
+
+.addLessonBtn,
+.addSectionBtn {
+  background-color: #0d6efd;
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1rem;
+  font-size: 0.9rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.addLessonBtn:hover,
+.addSectionBtn:hover {
+  background-color: #0b5ed7;
+}
+
+/* Submit row */
+.submitRow {
+  text-align: center;
+}
+
+.saveBtn {
+  background-color: #28a745;
+  color: #fff;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 6px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.saveBtn:hover {
+  background-color: #218838;
+  transform: translateY(-2px);
+}
+.file-upload-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+/* Hide the native file input */
+.file-upload-wrapper input[type="file"] {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  color: #ffffff;
+
+}
+
+/* Styled label that looks like a button */
+.file-upload-button {
+  display: inline-block;
+  padding: 0.8rem 1.5rem;
+  background-color: #515151; /* Customize with your preferred color */
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  text-align: center;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  color: #ffffff;
+  text-emphasis-color: #ffffff;
+}
+
+.file-upload-button:hover {
+  background-color: #0b5ed7;
+  transform: translateY(-2px);
+}
+/* New styles for custom file upload within the admin form */
+.fileUploadWrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.hiddenFileInput {
+  display: none;
+}
+
+.fileUploadButton {
+  display: inline-block;
+  padding: 0.8rem 1.5rem;
+  background-color: #ffffff;
+  border: 1px solid #0b5ed7;  /* 2px wide, solid style, color #140098 */
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: bold;
+  text-align: center;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  color: #0b5ed7;  /* Updated text color so it contrasts with white background */
+}
+
+
+.fileUploadButton:hover {
+  background-color: #0b5ed7;
+  transform: translateY(-2px);
+  color: #ffffff;
+}
+
+.previewContainer {
+  margin-top: 10px;
+}
+
+.previewImage {
+  width: 200px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-top: 5px;
+}
+
+/* Also ensure that "Lo que aprenderás" input rows are extra wide */
+.learningRow input {
+  width: 100%;
+  min-width: 300px;
+  padding: 0.6rem;
+  margin-bottom: 0.3rem;
+}

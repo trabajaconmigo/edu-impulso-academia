@@ -3,14 +3,15 @@ import { supabase } from "@/lib/supabaseClient";
 import Hero from "./Hero";
 import StaticSection from "./StaticSection";
 import WhiteBoxSection from "./WhiteBoxSection";
+import CourseContentSection from "./CourseContentSection"; // New dynamic course content section
 import CourseSidebar from "./CourseSidebar";
 import styles from "./page.module.css";
 
 interface Course {
   id: string;
-  title: string;          // Make sure this is present
-  description: string;    // And this
-  subtitle?: string;      // If you need it
+  title: string;
+  description: string;
+  subtitle?: string;
   thumbnail_url: string;
   slug: string;
   what_you_ll_learn: string;
@@ -20,7 +21,6 @@ interface Course {
   language: string;
   price: number;
 }
-
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default async function CoursePage(props: any) {
@@ -45,7 +45,9 @@ export default async function CoursePage(props: any) {
       <div className={styles.mainContainer}>
         <div className={styles.leftColumn}>
           <StaticSection whatYoullLearn={course.what_you_ll_learn} />
-          <WhiteBoxSection slug={slug} />
+         
+          {/* New dynamic course content section */}
+          <CourseContentSection course_id={course.id} />
         </div>
         <div className={styles.sidebarColumn}>
           <CourseSidebar course={course} />

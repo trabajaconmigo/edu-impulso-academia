@@ -1,42 +1,69 @@
-.whiteBox {
+.courseContentWrapper {
   background-color: #fff;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
   padding: 1.5rem;
-  
+  margin-top: 2rem;
 }
 
-.whiteBox h2 {
+.sectionHeader {
   font-size: 1.8rem;
   margin-bottom: 0.5rem;
+  color: #333;
 }
 
-.whiteBox h3 {
-  font-size: 1.4rem;
-  margin: 1rem 0 0.5rem 0;
+.summary {
+  font-size: 0.9rem;
+  color: #777;
+  margin-bottom: 1.5rem;
 }
 
-.whiteBox p {
-  margin-bottom: 1rem;
+/* Accordion container */
+.accordion {
+  border-top: 1px solid #e0e0e0;
 }
 
-.whiteBox ul {
-  list-style-type: disc;
-  margin-left: 1.5rem;
-  margin-bottom: 1rem;
+/* Each section item */
+.sectionItem {
+  border-bottom: 1px solid #e0e0e0;
 }
 
-.courseButton {
-  background-color: #a435f0;
-  color: #fff;
+/* Section title button with gray background */
+.sectionTitle {
+  width: 100%;
+  background-color: #f8f8f8;
   border: none;
-  padding: 0.8rem 1.5rem;
-  border-radius: 4px;
-  cursor: pointer;
+  padding: 0.8rem 1rem;
+  text-align: left;
   font-size: 1rem;
+  font-weight: bold;
+  color: #333;
+  cursor: pointer;
   transition: background-color 0.3s ease;
 }
 
-.courseButton:hover {
-  background-color: #922ec7;
+.sectionTitle:hover {
+  background-color: #e0e0e0;
+}
+
+/* The list of lectures inside a section */
+.lectureList {
+  padding: 0.5rem 1rem;
+}
+
+.lectureItem {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  font-size: 0.9rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.lectureItem:last-child {
+  border-bottom: none;
+}
+
+.lectureDuration {
+  color: #777;
+  white-space: nowrap;
 }
