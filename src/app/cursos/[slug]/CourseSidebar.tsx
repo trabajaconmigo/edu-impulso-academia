@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import styles from "./CourseSidebar.module.css";
 import BuyButton from "./BuyButton";
 import VideoViewPopup from "../../components/VideoViewPopup";
+import { supabase } from "@/lib/supabaseClient";
 
 interface Course {
   id: string;
@@ -22,7 +23,9 @@ interface CourseSidebarProps {
 
 export default function CourseSidebar({ course }: CourseSidebarProps) {
   const [showPopup, setShowPopup] = useState(false);
+  const [hasPurchased, setHasPurchased] = useState(false);
 
+  // Function to open preview video popup
   const openVideo = () => {
     if (course.preview_video) {
       setShowPopup(true);
@@ -31,6 +34,31 @@ export default function CourseSidebar({ course }: CourseSidebarProps) {
     }
   };
 
+  // Check if the current user has already purchased this course
+  useEffect(() => {
+    async function checkPurchase() {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (sessionData.session) {
+        const userId = sessionData.session.user.id;
+        const { data, error } = await supabase
+          .from("purchases")
+          .select("id")
+          .eq("course_id", course.id)
+          .eq("user_id", userId)
+          .single();
+        if (!error && data) {
+          setHasPurchased(true);
+        } else {
+          setHasPurchased(false);
+        }
+      } else {
+        setHasPurchased(false);
+      }
+    }
+    checkPurchase();
+  }, [course.id]);
+
+  // Calculate original price if discount exists.
   const originalPrice = course.discount
     ? (course.price / (1 - course.discount)).toFixed(2)
     : null;
@@ -54,27 +82,35 @@ export default function CourseSidebar({ course }: CourseSidebarProps) {
         </div>
       </div>
 
-      {/* Price & Discount Section */}
-      <div className={styles.priceSection}>
-        <div className={styles.currentPrice}>MX${course.price.toFixed(2)}</div>
-        {originalPrice && (
-          <>
-            <div className={styles.originalPrice}>
-              Precio Original: MX${parseFloat(originalPrice).toFixed(2)}
-            </div>
-            <div className={styles.discount}>
-              {Math.round((course.discount || 0) * 100)}% de descuento
-            </div>
-            <div className={styles.timer}>¡Oferta termina en 4 horas!</div>
-          </>
-        )}
-        <div className={styles.guarantee}>Garantía de devolución de 30 días</div>
-      </div>
+      {/* Price & Discount Section (only if user has NOT purchased the course) */}
+      {!hasPurchased && (
+        <div className={styles.priceSection}>
+          <div className={styles.currentPrice}>
+            MX${course.price.toFixed(2)}
+          </div>
+          {originalPrice && (
+            <>
+              <div className={styles.originalPrice}>
+                Precio Original: MX${parseFloat(originalPrice).toFixed(2)}
+              </div>
+              <div className={styles.discount}>
+                {Math.round((course.discount || 0) * 100)}% de descuento
+              </div>
+              <div className={styles.timer}>¡Oferta termina en 4 horas!</div>
+            </>
+          )}
+          <div className={styles.guarantee}>
+            Garantía de devolución de 30 días
+          </div>
+        </div>
+      )}
 
-      {/* Buy Button */}
-      <div className={styles.buyButton}>
-        <BuyButton course={course} />
-      </div>
+      {/* Buy Button: Only display if user has NOT purchased the course */}
+      {!hasPurchased && (
+        <div className={styles.buyButton}>
+          <BuyButton course={course} />
+        </div>
+      )}
 
       {/* "Este curso incluye:" Section */}
       {course.course_includes && (
