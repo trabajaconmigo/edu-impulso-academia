@@ -2,7 +2,7 @@
   background-color: #fff;
   width: 100%;
   max-width: 500px;
-  margin-top: 2rem;
+  margin: 2rem auto;        /* ensures horizontal centering on desktop */
   border: 1px solid #ddd;
   border-radius: 6px;
   padding: 2rem;
@@ -22,6 +22,7 @@
   gap: 1rem;
   text-align: left;
 }
+
 
 .formContainer label {
   font-weight: 500;

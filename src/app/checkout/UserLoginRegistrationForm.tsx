@@ -6,8 +6,8 @@ import styles from "./UserLoginRegistrationForm.module.css";
 
 interface UserLoginRegistrationFormProps {
   onLoginSuccess: () => void;
-  courseId: string;    // we might pass it if we want to show final price
-  amount: number;      // e.g. 200.00 => display only
+  courseId: string; 
+  amount: number;   // e.g. 200 => display only
 }
 
 export default function UserLoginRegistrationForm({
@@ -33,31 +33,57 @@ export default function UserLoginRegistrationForm({
 
     setLoading(true);
     try {
-      let result;
+      let authResult;
       if (isRegister) {
         // Create new account
-        result = await supabase.auth.signUp({ email, password });
+        authResult = await supabase.auth.signUp({
+          email,
+          password,
+        });
+        if (authResult.error) {
+          setErrorMsg(authResult.error.message || "Error creando cuenta");
+          setLoading(false);
+          return;
+        }
+
+        // Then sign in, to get a session immediately (if email confirm is disabled).
+        const signInResult = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (signInResult.error) {
+          setErrorMsg(
+            signInResult.error.message ||
+              "Revisa tu correo para confirmar la cuenta."
+          );
+          setLoading(false);
+          return;
+        }
+
       } else {
         // Sign in with email & password
-        result = await supabase.auth.signInWithPassword({ email, password });
-      }
-
-      if (result.error) {
-        setErrorMsg(result.error.message || "Error en la autenticación");
-        setLoading(false);
-        return;
+        authResult = await supabase.auth.signInWithPassword({ email, password });
+        if (authResult.error) {
+          setErrorMsg(authResult.error.message || "Error al iniciar sesión");
+          setLoading(false);
+          return;
+        }
       }
 
       // After success, check if the user truly has a session
       const { data } = await supabase.auth.getSession();
       if (!data.session) {
-        setErrorMsg("No se encontró sesión tras login/registro.");
+        setErrorMsg(
+          "No se encontró sesión activa. ¿Requiere confirmación por email?"
+        );
         setLoading(false);
         return;
       }
 
-      // user is now logged in
-      onLoginSuccess();
+      // We do a FULL page refresh to show the user in the navbar,
+      // preserving the same URL with ?courseId=xxx&amount=yyy
+      window.location.href = window.location.href;
+
     } catch (err) {
       console.error("Auth error:", err);
       setErrorMsg("Error en la autenticación.");
@@ -67,12 +93,14 @@ export default function UserLoginRegistrationForm({
 
   async function handleGoogleLogin() {
     setErrorMsg("");
-    // We want to come right back to the same checkout page
-    // so let's parse current location
-    const currentUrl = window.location.href; // e.g. /checkout?courseId=xxx&amount=xxx
+
+    // We'll come right back to the same /checkout?courseId=xxx&amount=yyy
+    const currentUrl = window.location.href;
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: currentUrl },
+      options: {
+        redirectTo: currentUrl,
+      },
     });
     if (error) {
       setErrorMsg(error.message);
@@ -84,6 +112,7 @@ export default function UserLoginRegistrationForm({
       <h2 className={styles.formTitle}>
         {isRegister ? "Crear Cuenta" : "Iniciar Sesión"}
       </h2>
+
       {errorMsg && <p className={styles.errorMsg}>{errorMsg}</p>}
 
       <form onSubmit={handleSubmit} className={styles.formContainer}>
@@ -169,7 +198,7 @@ export default function UserLoginRegistrationForm({
                 setErrorMsg("");
               }}
             >
-              Crear una aquí
+              Crear una cuenta
             </button>
           </p>
         )}
