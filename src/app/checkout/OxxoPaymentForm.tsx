@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { useStripe } from "@stripe/react-stripe-js";
+import styles from "./OxxoPaymentForm.module.css";
 
 interface OxxoPaymentFormProps {
   courseId: string;
-  amount: number;
+  amount: number; // The amount in pesos, e.g. 150. Convert to cents in your PaymentIntent
 }
 
 interface OxxoDisplayDetails {
@@ -27,6 +28,7 @@ export default function OxxoPaymentForm({ courseId, amount }: OxxoPaymentFormPro
     setErrorMsg("");
 
     try {
+      // Create PaymentIntent for OXXO
       const res = await fetch("/api/create-payment-intent-oxxo", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -40,51 +42,64 @@ export default function OxxoPaymentForm({ courseId, amount }: OxxoPaymentFormPro
         return;
       }
 
+      // Confirm the OXXO payment
       const result = await stripe!.confirmOxxoPayment(clientSecret, {
         payment_method: {
           billing_details: {
-            name: "Customer Name",
-            email: "customer@example.com",
+            name: "Cliente OXXO",
+            email: "cliente@example.com",
           },
         },
       });
 
       if (result.error) {
-        setErrorMsg(result.error.message || "Payment failed");
+        setErrorMsg(result.error.message || "Error en el pago OXXO");
       } else if (result.paymentIntent) {
-        // Cast next_action to our defined OxxoNextAction type
+        // We do NOT store a purchase row yet. We wait for the Stripe webhook.
         const nextAction = result.paymentIntent.next_action as OxxoNextAction;
         const voucher = nextAction?.oxxo_display_details?.hosted_voucher_url;
         if (voucher) {
           setVoucherUrl(voucher);
         } else {
           setErrorMsg(
-            "No voucher information received. It might take a few moments for voucher details to become available."
+            "No se recibió el comprobante. Intenta de nuevo en unos minutos."
           );
         }
       }
-    } catch (error: unknown) {
-      console.error("Error processing OXXO payment:", error);
-      setErrorMsg("Error processing OXXO payment");
+    } catch (error) {
+      console.error("Error OXXO:", error);
+      setErrorMsg("Error procesando OXXO");
     }
     setLoading(false);
   }
 
   return (
-    <div style={{ marginTop: "1rem" }}>
-      <button onClick={handleOxxoPayment} disabled={loading}>
-        {loading ? "Processing..." : "Pagar con OXXO"}
-      </button>
-      {errorMsg && <div style={{ color: "red" }}>{errorMsg}</div>}
-      {voucherUrl && (
-        <div style={{ marginTop: "1rem" }}>
+    <div className={styles.oxxoPaymentBox}>
+      <h3 className={styles.paymentTitle}>Pago con OXXO</h3>
+      {voucherUrl ? (
+        <div className={styles.voucherArea}>
           <p>
-            Para completar el pago, visita una tienda OXXO y muestra este comprobante:
+            Para completar tu pago, acude a una tienda OXXO y muestra el
+            comprobante:
           </p>
-          <a href={voucherUrl} target="_blank" rel="noopener noreferrer">
-            Ver comprobante de pago
+          <a href={voucherUrl} target="_blank" rel="noopener noreferrer" className={styles.voucherLink}>
+            Ver Comprobante
           </a>
+          <p>
+            Una vez que OXXO confirme tu pago, tu curso se activará
+            automáticamente.
+          </p>
+          <p>
+            Revisa tu perfil o tu correo. Podrías tener que esperar unos minutos.
+          </p>
         </div>
+      ) : (
+        <>
+          <button onClick={handleOxxoPayment} disabled={loading} className={styles.oxxoButton}>
+            {loading ? "Procesando..." : "Generar Comprobante OXXO"}
+          </button>
+          {errorMsg && <div className={styles.errorMsg}>{errorMsg}</div>}
+        </>
       )}
     </div>
   );

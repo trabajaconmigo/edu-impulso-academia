@@ -10,7 +10,11 @@ interface EditProfilePopupProps {
   initialImage: string;
 }
 
-export default function EditProfilePopup({ onClose, initialPhone, initialImage }: EditProfilePopupProps) {
+export default function EditProfilePopup({
+  onClose,
+  initialPhone,
+  initialImage,
+}: EditProfilePopupProps) {
   const [phoneNumber, setPhoneNumber] = useState(initialPhone);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
@@ -23,7 +27,23 @@ export default function EditProfilePopup({ onClose, initialPhone, initialImage }
     }
   }
 
-  // Center-crop and resize image to 300x300 without squeezing
+  // Delete the old image from the bucket if it exists and is not the fallback image.
+  async function deleteOldImage(oldUrl: string): Promise<void> {
+    if (!oldUrl || oldUrl === "/favicon.ico") return;
+
+    // Assumption: the URL format is:
+    // https://rvinrzxeetertylulqkx.supabase.co/storage/v1/object/public/courseimg/<filename>
+    const parts = oldUrl.split("/courseimg/");
+    if (parts.length < 2) return; // cannot determine file name
+    const fileName = parts[1];
+
+    const { error } = await supabase.storage.from("courseimg").remove([fileName]);
+    if (error) {
+      console.error("Error deleting old image:", error.message);
+    }
+  }
+
+  // Resize and crop image to 300x300 with center crop (cutting edges, not squeezing).
   async function resizeAndCropImage(file: File, targetSize: number): Promise<Blob> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -72,12 +92,10 @@ export default function EditProfilePopup({ onClose, initialPhone, initialImage }
       const resizedBlob = await resizeAndCropImage(selectedFile, 300);
       const fileExt = selectedFile.name.split(".").pop();
       const fileName = `${Date.now()}.${fileExt}`;
-      const { error } = await supabase.storage
-        .from("courseimg")
-        .upload(fileName, resizedBlob, {
-          cacheControl: "3600",
-          upsert: false,
-        });
+      const { error } = await supabase.storage.from("courseimg").upload(fileName, resizedBlob, {
+        cacheControl: "3600",
+        upsert: false,
+      });
       if (error) {
         alert("Error subiendo imagen: " + error.message);
         return null;
@@ -91,14 +109,26 @@ export default function EditProfilePopup({ onClose, initialPhone, initialImage }
 
   async function handleSave() {
     setLoading(true);
-    const { data: { session } } = await supabase.auth.getSession();
+    // Get current session to retrieve user id
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (!session) {
       alert("No hay sesión activa");
       setLoading(false);
       return;
     }
     const userId = session.user.id;
+
+    // If a new image is selected and initialImage is not the fallback, delete old image.
+    if (selectedFile && initialImage !== "/favicon.ico") {
+      await deleteOldImage(initialImage);
+    }
+
+    // Upload new image if selected.
     const profile_img = selectedFile ? await handleUploadImage() : null;
+
+    // Update the profiles table with phone number and (if available) new profile image.
     const { error } = await supabase
       .from("profiles")
       .update({
@@ -106,6 +136,7 @@ export default function EditProfilePopup({ onClose, initialPhone, initialImage }
         ...(profile_img ? { profile_img } : {}),
       })
       .eq("user_id", userId);
+
     if (error) {
       alert("Error actualizando perfil: " + error.message);
     } else {

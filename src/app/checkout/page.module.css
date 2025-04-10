@@ -1,0 +1,54 @@
+/* page.module.css */
+
+.container {
+    width: 100%;
+    max-width: 800px;       /* Restricts container width on desktop */
+    margin: 0 auto;         /* Centers the container horizontally */
+    padding: 2rem 1rem;     /* Vertical and horizontal padding */
+    text-align: center;     /* Center inner text, if needed */
+  }
+  
+  .loading {
+    font-size: 1.2rem;
+    color: #555;
+    margin-top: 2rem;
+  }
+  
+  .checkoutBox {
+    background-color: #fff;
+    width: 100%;
+    max-width: 600px;        /* Ensure checkout box doesn't exceed 800px */
+    margin: 0 auto;          /* Center the checkout box */
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+  
+  .checkoutTitle {
+    text-align: center;
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+    color: #1c1d1f;
+  }
+  
+  .checkoutSubtitle {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    color: #555;
+    text-align: center;
+  }
+  
+  .checkoutPrice {
+    text-align: center;
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+    color: #333;
+  }
+  
+  .paymentMethods {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+  

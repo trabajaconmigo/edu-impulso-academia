@@ -1,16 +1,16 @@
-// app/checkout/CheckoutForm.tsx
 "use client";
 
 import { useState } from "react";
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { supabase } from "@/lib/supabaseClient";
+import styles from "./CheckoutForm.module.css";
 
 interface CheckoutFormProps {
   courseId: string;
-  amount: number;
+  amountCents: number; // e.g. 20000 => 200.00 MXN
 }
 
-export default function CheckoutForm({ courseId, amount }: CheckoutFormProps) {
+export default function CheckoutForm({ courseId, amountCents }: CheckoutFormProps) {
   const stripe = useStripe();
   const elements = useElements();
   const [errorMsg, setErrorMsg] = useState("");
@@ -19,19 +19,27 @@ export default function CheckoutForm({ courseId, amount }: CheckoutFormProps) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!stripe || !elements) return;
-
     setLoading(true);
     setErrorMsg("");
 
-    // Create a PaymentIntent on your server
+    // Create PaymentIntent on server
     const res = await fetch("/api/create-payment-intent", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ courseId, amount }),
+      body: JSON.stringify({
+        courseId,
+        // We pass the raw cents, e.g. 20000
+        amountCents,
+      }),
     });
-    const { clientSecret } = await res.json();
+    const { clientSecret, error } = await res.json();
+    if (error) {
+      setErrorMsg("Error creando PaymentIntent: " + error);
+      setLoading(false);
+      return;
+    }
 
-    // Confirm the card payment using Stripe Elements
+    // confirm card payment
     const result = await stripe.confirmCardPayment(clientSecret, {
       payment_method: {
         card: elements.getElement(CardElement)!,
@@ -39,45 +47,50 @@ export default function CheckoutForm({ courseId, amount }: CheckoutFormProps) {
     });
 
     if (result.error) {
-      setErrorMsg(result.error.message || "Payment failed");
+      setErrorMsg(result.error.message || "Error en el pago con tarjeta");
       setLoading(false);
     } else if (result.paymentIntent && result.paymentIntent.status === "succeeded") {
-      // Retrieve the current session
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
+      // Check user session
+      const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        setErrorMsg("User session expired, please log in again.");
+        setErrorMsg("La sesión expiró, por favor inicia sesión de nuevo.");
         setLoading(false);
         return;
       }
-      const userId = session.user.id;
-
-      // Save the purchase in Supabase
+      // Insert purchase into DB (in pesos, e.g. 200.00)
       await fetch("/api/save-purchase", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId,
+          userId: session.user.id,
           courseId,
           paymentId: result.paymentIntent.id,
-          amount,
+          // We store real pesos, so divide by 100 => 200.00
+          amount: amountCents / 100,
         }),
       });
 
-      // Redirect to profile on success
+      // redirect to perfil
       window.location.href = "/perfil";
     }
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <CardElement />
-      {errorMsg && <div style={{ color: "red" }}>{errorMsg}</div>}
-      <button type="submit" disabled={!stripe || loading}>
-        {loading ? "Processing..." : "Pay Now"}
-      </button>
-    </form>
+    <div className={styles.cardPaymentBox}>
+      <h3 className={styles.paymentTitle}>Pago con Tarjeta</h3>
+      <form onSubmit={handleSubmit} className={styles.paymentForm}>
+        <div className={styles.cardElementWrapper}>
+          <CardElement />
+        </div>
+        {errorMsg && <div className={styles.errorMsg}>{errorMsg}</div>}
+        <button
+          type="submit"
+          disabled={!stripe || loading}
+          className={styles.submitButton}
+        >
+          {loading ? "Procesando..." : "Pagar Ahora"}
+        </button>
+      </form>
+    </div>
   );
 }

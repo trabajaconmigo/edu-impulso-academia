@@ -1,0 +1,78 @@
+.loginBox {
+  background-color: #fff;
+  width: 100%;
+  max-width: 500px;
+  margin-top: 2rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 2rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  text-align: center;
+}
+
+.formTitle {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: #1c1d1f;
+}
+
+.formContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  text-align: left;
+}
+
+.formContainer label {
+  font-weight: 500;
+  color: #333;
+}
+
+.formContainer input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.errorMsg {
+  color: red;
+  margin-top: 1rem;
+}
+
+.formButton {
+  background-color: #a435f0;
+  color: #fff;
+  padding: 0.7rem 1.2rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-top: 1rem;
+}
+
+.formButton:hover {
+  background-color: #922ec7;
+}
+
+.toggleRegister {
+  margin-top: 1rem;
+}
+
+.toggleRegister button {
+  background: none;
+  border: none;
+  color: #a435f0;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.toggleRegister button:hover {
+  color: #922ec7;
+}
+
+.infoText {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: #555;
+}

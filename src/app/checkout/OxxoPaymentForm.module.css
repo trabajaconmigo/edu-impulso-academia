@@ -1,0 +1,47 @@
+.oxxoPaymentBox {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+.paymentTitle {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  color: #1c1d1f;
+}
+
+.oxxoButton {
+  background-color: #f89406;
+  color: #fff;
+  border: none;
+  padding: 0.7rem 1.2rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.oxxoButton:hover {
+  background-color: #da7b02;
+}
+
+.errorMsg {
+  color: red;
+  margin-top: 0.5rem;
+}
+
+.voucherArea {
+  border: 1px solid #bbb;
+  padding: 1rem;
+  border-radius: 4px;
+  background-color: #fafafa;
+  text-align: left;
+  margin-top: 1rem;
+}
+
+.voucherLink {
+  color: #0073b1;
+  text-decoration: underline;
+  display: inline-block;
+  margin-top: 0.5rem;
+}

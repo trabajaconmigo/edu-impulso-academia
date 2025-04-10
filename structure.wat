@@ -64,3 +64,23 @@ SUPABASE DATABASE
 │
 └─ blog_posts               // Blog posts for SEO and content marketing
      └── (slug, title, content, published_at, author_id → profiles/users)
+
+
+
+app/
+  └─ checkout/
+      ├─ page.tsx                     // Main checkout page
+      ├─ page.module.css              // Shared CSS for page.tsx
+      ├─ CheckoutForm.tsx             // Card Payment
+      ├─ CheckoutForm.module.css
+      ├─ OxxoPaymentForm.tsx          // OXXO Payment
+      ├─ OxxoPaymentForm.module.css
+  └─ api/
+      ├─ create-payment-intent/
+      │   └─ route.ts
+      ├─ create-payment-intent-oxxo/
+      │   └─ route.ts
+      ├─ save-purchase/
+      │   └─ route.ts
+      └─ stripe-webhook/
+          └─ route.ts

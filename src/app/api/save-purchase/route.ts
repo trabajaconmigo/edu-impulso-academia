@@ -1,15 +1,16 @@
-// app/api/save-purchase/route.ts
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabaseClient";
 
 export async function POST(request: Request) {
   const { userId, courseId, paymentId, amount } = await request.json();
-  // Insert purchase into Supabase
+  // In this scenario, "amount" is already 200.00 (not 20000)
+  // because we did (amountCents / 100) on the front-end.
+
   const { error } = await supabase.from("purchases").insert({
     user_id: userId,
     course_id: courseId,
     payment_id: paymentId,
-    amount: amount / 100, // Convert to dollars if needed
+    amount: amount, // 200.00
     purchased_at: new Date().toISOString(),
   });
 
