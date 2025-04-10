@@ -4,41 +4,38 @@ import React, { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
-
 import { supabase } from "@/lib/supabaseClient";
 import CheckoutForm from "./CheckoutForm";
 import OxxoPaymentForm from "./OxxoPaymentForm";
+import UserLoginRegistrationForm from "./UserLoginRegistrationForm";
 import styles from "./page.module.css";
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
 );
 
-export default function CheckoutPage() {
+function CheckoutPageContent() {
+  // useSearchParams() is now safely wrapped in Suspense below
   const searchParams = useSearchParams();
-  // Query param => e.g. courseId=214ede3e-f227-49a1-9d85-69048aabb8ba
+  
+  // For this example, we expect the URL to be like:
+  // /checkout?courseId=xxxx&amount=20000   where amount is in cents (20000 = MX$200.00)
   const courseId = searchParams.get("courseId");
-  // e.g. amount=20000 => 200.00 in pesos
   const rawAmount = searchParams.get("amount");
   const amountCents = rawAmount ? Number(rawAmount) : 0;
-  const displayAmount = amountCents / 100; // e.g. 200.00
+  const displayAmount = amountCents / 100; // convert cents to pesos
 
-  // We'll fetch the course name from Supabase
   const [courseTitle, setCourseTitle] = useState<string>("");
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
   const [loadingCourse, setLoadingCourse] = useState(true);
 
   useEffect(() => {
     async function checkSessionAndCourse() {
-      // 1) Check user session
+      // Check user session
       const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        setLoggedIn(true);
-      } else {
-        setLoggedIn(false);
-      }
+      setLoggedIn(!!data.session);
 
-      // 2) Fetch course name
+      // Fetch course title from your "courses" table
       if (courseId) {
         const { data: courseData, error } = await supabase
           .from("courses")
@@ -55,54 +52,49 @@ export default function CheckoutPage() {
     checkSessionAndCourse();
   }, [courseId]);
 
-  // Validate we have valid query params
   if (!courseId || !amountCents) {
-    return (
-      <div className={styles.container}>
-        Faltan datos del curso o el precio.
-      </div>
-    );
+    return <div className={styles.container}>Faltan datos del curso o el precio.</div>;
   }
 
-  // If still loading the course name or session check, show a spinner
   if (loadingCourse || loggedIn === null) {
-    return (
-      <div className={styles.container}>
-        Cargando datos de curso y sesión...
-      </div>
-    );
+    return <div className={styles.container}>Cargando datos de curso y sesión...</div>;
   }
 
-  // If user is not logged in, you can either show a custom login form or a simple message
+  // If the user is not logged in, show a message or inline login form.
   if (loggedIn === false) {
     return (
       <div className={styles.container}>
         <h2>Necesitas iniciar sesión para comprar este curso.</h2>
         <p>Por favor, inicia sesión o crea una cuenta.</p>
-        {/* Optionally, inline <UserLoginRegistrationForm /> */}
+        {/* Optionally, you can render <UserLoginRegistrationForm /> here */}
       </div>
     );
   }
 
-  // Logged in, show the final purchase details
+  // User is logged in, show checkout details.
   return (
-    <Suspense fallback={<div>Cargando Checkout...</div>}>
-      <div className={styles.checkoutBox}>
-        <h1 className={styles.checkoutTitle}>Finalizar Compra</h1>
-        <p className={styles.checkoutSubtitle}>
-          Estás comprando: <strong>{courseTitle || "Curso sin nombre"}</strong>
-        </p>
-        <p className={styles.checkoutPrice}>
-          Total a pagar: <strong>MX${displayAmount.toFixed(2)}</strong>
-        </p>
+    <div className={styles.checkoutBox}>
+      <h1 className={styles.checkoutTitle}>Finalizar Compra</h1>
+      <p className={styles.checkoutSubtitle}>
+        Estás comprando: <strong>{courseTitle || "Curso sin nombre"}</strong>
+      </p>
+      <p className={styles.checkoutPrice}>
+        Total a pagar: <strong>MX${displayAmount.toFixed(2)}</strong>
+      </p>
+      <Elements stripe={stripePromise}>
+        <div className={styles.paymentMethods}>
+          <CheckoutForm courseId={courseId} amountCents={amountCents} />
+          <OxxoPaymentForm courseId={courseId} amount={amountCents} />
+        </div>
+      </Elements>
+    </div>
+  );
+}
 
-        <Elements stripe={stripePromise}>
-          <div className={styles.paymentMethods}>
-            <CheckoutForm courseId={courseId} amountCents={amountCents} />
-            <OxxoPaymentForm courseId={courseId} amount={amountCents} />
-          </div>
-        </Elements>
-      </div>
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={<div className={styles.loading}>Cargando checkout...</div>}>
+      <CheckoutPageContent />
     </Suspense>
   );
 }
