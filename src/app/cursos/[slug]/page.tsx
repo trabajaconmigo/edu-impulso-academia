@@ -41,11 +41,13 @@ export default async function CoursePage({
           <StaticSection whatYoullLearn={course.what_you_ll_learn} />
           <CourseContentSection course_id={course.id} />
 
-          {course.instructor_id && (
-            <InstructorSection instructorId={course.instructor_id} />
-          )}
+          
 
-         
+          {/* Additional details for "Requisitos" and "Descripción" */}
+          <AdditionalDetailsSection
+            requirements={course.requirements}
+            descriptionLong={course.description_long}
+          />
         </div>
 
         <div className={styles.sidebarColumn}>
