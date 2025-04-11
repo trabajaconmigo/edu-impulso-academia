@@ -45,11 +45,7 @@ export default async function CoursePage({
             <InstructorSection instructorId={course.instructor_id} />
           )}
 
-          {/* Additional details for "Requisitos" and "Descripción" */}
-          <AdditionalDetailsSection
-            requirements={course.requirements}
-            descriptionLong={course.description_long}
-          />
+         
         </div>
 
         <div className={styles.sidebarColumn}>
