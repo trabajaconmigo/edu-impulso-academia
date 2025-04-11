@@ -156,7 +156,10 @@ export default function AddOrEditCoursePage() {
 
       // parse what_you_ll_learn => bullet points
       if (cData.what_you_ll_learn) {
-        const points = cData.what_you_ll_learn.split(/\r?\n\r?\n|\r?\n/).filter((p) => p.trim());
+        const points = cData.what_you_ll_learn
+  .split(/\r?\n+/)
+  .filter((p: string) => p.trim().length > 0);
+
         setLearningPoints(points);
       }
 
