@@ -15,7 +15,7 @@ export default async function CoursePage({
 }) {
   const { slug } = params;
 
-  // Fetch the course (including new columns like requirements, description_long, instructor_id)
+  // Fetch the course row from Supabase
   const { data, error } = await supabase
     .from("courses")
     .select("*")
@@ -27,31 +27,34 @@ export default async function CoursePage({
     return notFound();
   }
 
-  // The course row
-  const course = data;
+  const course = data; // an object with fields like id, title, instructor_id, etc.
 
   return (
     <>
+      {/* Hero: Title + short description */}
       <Hero title={course.title} description={course.description} />
 
       <div className={styles.mainContainer}>
         <div className={styles.leftColumn}>
+          {/* "What you'll learn" */}
           <StaticSection whatYoullLearn={course.what_you_ll_learn} />
 
+          {/* Course content: sections & lectures */}
           <CourseContentSection course_id={course.id} />
 
-          {/* If there's an instructor_id, render InstructorSection */}
+          {/* Instructor info, if instructor_id is present */}
           {course.instructor_id && (
             <InstructorSection instructorId={course.instructor_id} />
           )}
 
-          {/* "Requisitos" & "Descripción" container */}
+          {/* Requirements + Description (HTML) */}
           <AdditionalDetailsSection
-            requirements={course.requirements}
-            descriptionLong={course.description_long}
+            requirements={course.requirements}        // HTML for "Requisitos"
+            descriptionLong={course.description_long} // HTML for "Descripción"
           />
         </div>
 
+        {/* Right-hand sidebar: Price, Buy Button, etc. */}
         <div className={styles.sidebarColumn}>
           <CourseSidebar course={course} />
         </div>
