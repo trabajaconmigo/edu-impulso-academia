@@ -23,7 +23,7 @@ export default function AdditionalDetailsSection({
       {requirements && (
         <div className={styles.sectionBlock}>
           <h2 className={styles.title}>Requisitos</h2>
-          <div
+          <div 
             dangerouslySetInnerHTML={{ __html: requirements }}
           />
         </div>
