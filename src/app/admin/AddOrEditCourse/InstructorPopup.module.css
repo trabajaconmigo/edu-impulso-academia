@@ -1,0 +1,85 @@
+/* InstructorPopup.module.css */
+
+.popupOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.popup {
+  background-color: #fff;
+  width: 500px;
+  max-width: 95%;
+  padding: 2rem;
+  border-radius: 8px;
+  position: relative;
+}
+
+.popup h2 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.popupForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.popupForm label {
+  font-weight: 500;
+  color: #444;
+  margin-bottom: 0.2rem;
+}
+
+.popupForm input,
+.popupForm textarea {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 0.6rem;
+  font-size: 0.95rem;
+}
+
+.buttonRow {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.saveBtn {
+  background-color: #28a745;
+  color: #fff;
+  border: none;
+  padding: 0.7rem 1.2rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.saveBtn:hover {
+  background-color: #218838;
+}
+
+.cancelBtn {
+  background-color: transparent;
+  color: #333;
+  border: 1px solid #999;
+  padding: 0.7rem 1.2rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.cancelBtn:hover {
+  background-color: #999;
+  color: #fff;
+}

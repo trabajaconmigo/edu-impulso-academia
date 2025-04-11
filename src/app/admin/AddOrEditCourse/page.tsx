@@ -4,37 +4,17 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { COURSE_CATEGORIES } from "@/app/components/courseCategories";
+import InstructorPopup from "./InstructorPopup"; // NEW: separate TSX file for the popup
 import styles from "./styles/AddOrEditCourse.module.css";
 
-
-/** 
- * Predefined icons for the "Este curso incluye" features (unchanged).
- */
+/** "Este curso incluye" icons */
 const PREDEFINED_FEATURE_ICONS = [
-  {
-    label: "Ícono de Video",
-    url: "https://rvinrzxeetertylulqkx.supabase.co/storage/v1/object/public/courseimg//video_icon.png",
-  },
-  {
-    label: "Ícono de Descargas",
-    url: "https://rvinrzxeetertylulqkx.supabase.co/storage/v1/object/public/courseimg//download.png",
-  },
-  {
-    label: "Ícono de Tareas",
-    url: "https://rvinrzxeetertylulqkx.supabase.co/storage/v1/object/public/courseimg//certificate-icon.png",
-  },
-  {
-    label: "Ícono de Dispositivos",
-    url: "https://rvinrzxeetertylulqkx.supabase.co/storage/v1/object/public/courseimg//devices-icon.png",
-  },
-  {
-    label: "Ícono de Foros",
-    url: "https://rvinrzxeetertylulqkx.supabase.co/storage/v1/object/public/courseimg//foros.png",
-  },
-  {
-    label: "Ícono de Certificado",
-    url: "https://rvinrzxeetertylulqkx.supabase.co/storage/v1/object/public/courseimg//certificate.png",
-  },
+  { label: "Ícono de Video", url: "https://rvinrzxeetertylulqkx.supabase.co/storage/v1/object/public/courseimg//video_icon.png" },
+  { label: "Ícono de Descargas", url: "https://rvinrzxeetertylulqkx.supabase.co/storage/v1/object/public/courseimg//download.png" },
+  { label: "Ícono de Tareas", url: "https://rvinrzxeetertylulqkx.supabase.co/storage/v1/object/public/courseimg//certificate-icon.png" },
+  { label: "Ícono de Dispositivos", url: "https://rvinrzxeetertylulqkx.supabase.co/storage/v1/object/public/courseimg//devices-icon.png" },
+  { label: "Ícono de Foros", url: "https://rvinrzxeetertylulqkx.supabase.co/storage/v1/object/public/courseimg//foros.png" },
+  { label: "Ícono de Certificado", url: "https://rvinrzxeetertylulqkx.supabase.co/storage/v1/object/public/courseimg//certificate.png" },
 ];
 
 interface FeatureItem {
@@ -48,8 +28,8 @@ interface LessonInput {
   youtube_link: string;
   paid: boolean;
   order_index: number;
-  minutes: number; // stored locally
-  seconds: number; // stored locally
+  minutes: number;
+  seconds: number;
 }
 
 interface SectionInput {
@@ -66,12 +46,24 @@ interface CourseData {
   description: string;
   subtitle?: string;
   thumbnail_url: string;
-  what_you_ll_learn?: string;  // We keep this field for DB
+  what_you_ll_learn?: string;
   price: number;
   language?: string;
   category?: string;
   author_id?: string | null;
-  course_includes?: string;    // Already in DB
+  course_includes?: string;
+
+  // NEW columns
+  requirements?: string | null;
+  description_long?: string | null;
+  instructor_id?: string | null;
+}
+
+interface InstructorRow {
+  id: string;
+  user_id: string;
+  full_name: string;
+  // other columns...
 }
 
 export default function AddOrEditCoursePage() {
@@ -80,7 +72,6 @@ export default function AddOrEditCoursePage() {
   const [courseId, setCourseId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // All course fields in 'course'
   const [course, setCourse] = useState<CourseData>({
     slug: "",
     title: "",
@@ -90,21 +81,30 @@ export default function AddOrEditCoursePage() {
     category: "otros",
   });
 
-  // For local image file:
+  // For image upload
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  // "features" for "Este curso incluye"
+  // "Este curso incluye" features
   const [features, setFeatures] = useState<FeatureItem[]>([]);
 
   // Sections & lessons
   const [sections, setSections] = useState<SectionInput[]>([]);
 
-  // "Lo que aprenderás" as bullet points
+  // "Lo que aprenderás" bullet points
   const [learningPoints, setLearningPoints] = useState<string[]>([]);
 
-  /* --------------------------------------------
-   * On mount, check if editing
-   * -------------------------------------------- */
+  // NEW: Requirements => bullet points
+  const [requirementsPoints, setRequirementsPoints] = useState<string[]>([]);
+
+  // NEW: Description => multi paragraphs
+  const [descParas, setDescParas] = useState<string[]>([]);
+
+  // NEW: Instructors
+  const [instructors, setInstructors] = useState<InstructorRow[]>([]);
+  const [showInstructorPopup, setShowInstructorPopup] = useState(false);
+  const [editingInstructor, setEditingInstructor] = useState<InstructorRow | null>(null);
+
+  // On mount
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const cId = params.get("courseId");
@@ -113,13 +113,26 @@ export default function AddOrEditCoursePage() {
       setCourseId(cId);
       fetchExistingCourse(cId);
     } else {
-      fetchAuthorId(); // For new course
+      fetchAuthorId();
     }
+    fetchAllInstructors(); // Offer a dropdown of all instructors
   }, []);
 
-  /* --------------------------------------------
-   * Fetch existing course, parse "course_includes" & "what_you_ll_learn"
-   * -------------------------------------------- */
+  async function fetchAllInstructors() {
+    // NEW: get all instructors in table "instructors"
+    const { data, error } = await supabase.from("instructors").select("*");
+    if (!error && data) {
+      setInstructors(data);
+    }
+  }
+
+  async function fetchAuthorId() {
+    const { data: userData } = await supabase.auth.getUser();
+    if (userData?.user) {
+      setCourse((prev) => ({ ...prev, author_id: userData.user.id }));
+    }
+  }
+
   async function fetchExistingCourse(id: string) {
     setLoading(true);
     try {
@@ -134,32 +147,40 @@ export default function AddOrEditCoursePage() {
       }
       setCourse(cData);
 
-      // Parse course_includes into features
+      // parse course_includes => features
       let parsedFeatures: FeatureItem[] = [];
       if (cData.course_includes) {
         parsedFeatures = parseFeaturesFromHTML(cData.course_includes);
       }
       setFeatures(parsedFeatures);
 
-      // Parse "what_you_ll_learn" into bullet points
+      // parse what_you_ll_learn => bullet points
       if (cData.what_you_ll_learn) {
-        const points = cData.what_you_ll_learn
-          .split(/\r?\n\r?\n|\r?\n/)
-          .filter((p: string) => p.trim().length > 0);
+        const points = cData.what_you_ll_learn.split(/\r?\n\r?\n|\r?\n/).filter((p) => p.trim());
         setLearningPoints(points);
       }
 
-      // Fetch sections & lectures
+      // NEW: parse requirements => bullet points
+      if (cData.requirements) {
+        const reqLines = parseLiItemsFromHTML(cData.requirements);
+        setRequirementsPoints(reqLines);
+      }
+
+      // NEW: parse description_long => paragraphs
+      if (cData.description_long) {
+        const paragraphs = parseParagraphsFromHTML(cData.description_long);
+        setDescParas(paragraphs);
+      }
+
+      // fetch sections/lessons
       const { data: contentData, error: cntErr } = await supabase
         .from("course_contents")
         .select("*")
         .eq("course_id", id)
         .order("order_index", { ascending: true });
-      if (cntErr) {
-        console.error("Error fetching course_contents:", cntErr);
-        return;
+      if (!cntErr && contentData) {
+        buildSectionsAndLessons(contentData);
       }
-      buildSectionsAndLessons(contentData || []);
     } finally {
       setLoading(false);
     }
@@ -178,14 +199,26 @@ export default function AddOrEditCoursePage() {
     return feats;
   }
 
+  // NEW: parse <ul><li>line</li> => array of strings
+  function parseLiItemsFromHTML(htmlStr: string): string[] {
+    const liMatches = htmlStr.split("<li>").slice(1);
+    return liMatches.map((chunk) => {
+      return chunk.split("</li>")[0].replace(/<[^>]+>/g, "").trim();
+    });
+  }
+
+  // NEW: parse paragraphs => array
+  function parseParagraphsFromHTML(htmlStr: string): string[] {
+    // naive approach => split by <p>
+    const splitted = htmlStr.split("<p>").slice(1);
+    return splitted.map((chunk) => chunk.split("</p>")[0].replace(/<[^>]+>/g, "").trim());
+  }
+
   function buildSectionsAndLessons(rows: any[]) {
     const rawSections = rows.filter((it) => it.type === "section");
     const rawLectures = rows.filter((it) => it.type === "lecture");
-
     const built = rawSections.map((sec: any) => {
-      const theseLectures = rawLectures.filter(
-        (lec: any) => lec.parent_section_id === sec.id
-      );
+      const theseLectures = rawLectures.filter((lec: any) => lec.parent_section_id === sec.id);
       const mappedLessons = theseLectures.map((lec: any) => {
         const duration = lec.duration || 0;
         const minutes = Math.floor(duration / 60);
@@ -210,31 +243,7 @@ export default function AddOrEditCoursePage() {
     setSections(built);
   }
 
-  /* --------------------------------------------
-   * For a new course, set author_id from logged user
-   * -------------------------------------------- */
-  async function fetchAuthorId() {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (user) {
-      setCourse((prev) => ({ ...prev, author_id: user.id }));
-    }
-  }
-
-  /* --------------------------------------------
-   * Course field changes
-   * -------------------------------------------- */
-  function handleCourseChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-  ) {
-    setCourse((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  }
-
-  /* --------------------------------------------
-   * Image Upload / Resize to 750x500
-   * -------------------------------------------- */
-  // Updated: use a custom file-upload UI (see below)
+  // File upload
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     if (e.target.files && e.target.files.length > 0) {
       setSelectedFile(e.target.files[0]);
@@ -242,15 +251,11 @@ export default function AddOrEditCoursePage() {
       setSelectedFile(null);
     }
   }
-
   async function handleUploadImage() {
     if (!selectedFile) return;
     setLoading(true);
     try {
-      // 1) Resize the image to 750x500
       const resizedBlob = await resizeImageFile(selectedFile, 750, 500);
-
-      // 2) Upload to Supabase Storage
       const fileExt = selectedFile.name.split(".").pop();
       const fileName = `${Date.now()}.${fileExt}`;
       const { error: uploadError } = await supabase.storage
@@ -259,13 +264,10 @@ export default function AddOrEditCoursePage() {
           cacheControl: "3600",
           upsert: false,
         });
-
       if (uploadError) {
         alert("Error subiendo imagen: " + uploadError.message);
         return;
       }
-
-      // 3) Build the public URL
       const url = `https://rvinrzxeetertylulqkx.supabase.co/storage/v1/object/public/courseimg/${fileName}`;
       setCourse((prev) => ({ ...prev, thumbnail_url: url }));
       alert("Imagen subida y asignada correctamente");
@@ -273,13 +275,12 @@ export default function AddOrEditCoursePage() {
       setLoading(false);
     }
   }
-
   async function resizeImageFile(file: File, width: number, height: number): Promise<Blob> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = function (ev) {
+      reader.onload = function(ev) {
         const img = new Image();
-        img.onload = function () {
+        img.onload = function() {
           const canvas = document.createElement("canvas");
           canvas.width = width;
           canvas.height = height;
@@ -310,17 +311,115 @@ export default function AddOrEditCoursePage() {
     });
   }
 
-  /* --------------------------------------------
-   * Sections & Lessons
-   * -------------------------------------------- */
+  // Changes to course fields
+  function handleCourseChange(
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) {
+    setCourse((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  }
+
+  // "Lo que aprenderás"
+  function addLearningPoint() {
+    setLearningPoints((prev) => [...prev, ""]);
+  }
+  function removeLearningPoint(idx: number) {
+    const updated = [...learningPoints];
+    updated.splice(idx, 1);
+    setLearningPoints(updated);
+  }
+  function handleLearningPointChange(idx: number, e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
+    const updated = [...learningPoints];
+    updated[idx] = e.target.value;
+    setLearningPoints(updated);
+  }
+  function buildLearningPointsString(points: string[]): string {
+    return points.join("\n\n");
+  }
+
+  // Requirements => bullet points
+  function addRequirementPoint() {
+    setRequirementsPoints((prev) => [...prev, ""]);
+  }
+  function removeRequirementPoint(idx: number) {
+    const updated = [...requirementsPoints];
+    updated.splice(idx, 1);
+    setRequirementsPoints(updated);
+  }
+  function handleRequirementChange(idx: number, e: React.ChangeEvent<HTMLInputElement>) {
+    const updated = [...requirementsPoints];
+    updated[idx] = e.target.value;
+    setRequirementsPoints(updated);
+  }
+  function buildRequirementsHTML(points: string[]): string {
+    // <ul><li>point1</li><li>point2</li> ...
+    if (!points.length) return "";
+    let html = '<ul style="list-style-type: disc;">\n';
+    points.forEach((p) => {
+      html += `  <li>${p}</li>\n`;
+    });
+    html += "</ul>";
+    return html;
+  }
+
+  // Description => multi paragraphs
+  function addDescPara() {
+    setDescParas((prev) => [...prev, ""]);
+  }
+  function removeDescPara(idx: number) {
+    const updated = [...descParas];
+    updated.splice(idx, 1);
+    setDescParas(updated);
+  }
+  function handleDescParaChange(idx: number, e: React.ChangeEvent<HTMLTextAreaElement>) {
+    const updated = [...descParas];
+    updated[idx] = e.target.value;
+    setDescParas(updated);
+  }
+  function buildDescriptionHTML(paras: string[]): string {
+    // <p style="margin-top: 1rem;"> for subsequent paragraphs or simpler approach:
+    if (!paras.length) return "";
+    let html = "";
+    paras.forEach((txt, i) => {
+      if (i === 0) {
+        html += `<p>${txt}</p>\n`;
+      } else {
+        // add top margin to subsequent paragraphs
+        html += `<p style="margin-top:1rem;">${txt}</p>\n`;
+      }
+    });
+    return html;
+  }
+
+  // "Este curso incluye"
+  function addFeature() {
+    setFeatures((prev) => [...prev, { iconUrl: "", text: "" }]);
+  }
+  function removeFeature(idx: number) {
+    const updated = [...features];
+    updated.splice(idx, 1);
+    setFeatures(updated);
+  }
+  function handleFeatureChange(idx: number, e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
+    const { name, value } = e.target;
+    const updated = [...features];
+    (updated[idx] as any)[name] = value;
+    setFeatures(updated);
+  }
+  function buildFeaturesHTML(items: FeatureItem[]): string {
+    if (!items || !items.length) return "";
+    let html = "<ul>\n";
+    items.forEach((f) => {
+      html += `  <li><img src="${f.iconUrl}" /> ${f.text}</li>\n`;
+    });
+    html += "</ul>";
+    return html;
+  }
+
+  // Sections & lessons
   function addSection() {
     setSections((prev) => [
       ...prev,
-      {
-        title: "",
-        order_index: prev.length + 1,
-        lessons: [],
-      },
+      { title: "", order_index: prev.length + 1, lessons: [] },
     ]);
   }
   function removeSection(idx: number) {
@@ -328,15 +427,9 @@ export default function AddOrEditCoursePage() {
     updated.splice(idx, 1);
     setSections(updated);
   }
-  function handleSectionChange(
-    idx: number,
-    e: React.ChangeEvent<HTMLInputElement>
-  ) {
+  function handleSectionChange(idx: number, e: React.ChangeEvent<HTMLInputElement>) {
     const updated = [...sections];
-    updated[idx] = {
-      ...updated[idx],
-      [e.target.name]: e.target.value,
-    };
+    updated[idx] = { ...updated[idx], [e.target.name]: e.target.value };
     setSections(updated);
   }
   function addLesson(secIdx: number) {
@@ -356,12 +449,8 @@ export default function AddOrEditCoursePage() {
     updated[secIdx].lessons.splice(lesIdx, 1);
     setSections(updated);
   }
-  function handleLessonChange(
-    secIdx: number,
-    lesIdx: number,
-    e: React.ChangeEvent<HTMLInputElement>
-  ) {
-    const { name, value, type, checked } = e.target;
+  function handleLessonChange(secIdx: number, lesIdx: number, e: React.ChangeEvent<HTMLInputElement>) {
+    const { name, value, checked } = e.target;
     const updated = [...sections];
     const lesson = updated[secIdx].lessons[lesIdx];
     if (name === "paid") {
@@ -376,106 +465,12 @@ export default function AddOrEditCoursePage() {
     updated[secIdx].lessons[lesIdx] = lesson;
     setSections(updated);
   }
-
-  /* --------------------------------------------
-   * Features for "Este curso incluye"
-   * -------------------------------------------- */
-  function addFeature() {
-    setFeatures((prev) => [...prev, { iconUrl: "", text: "" }]);
-  }
-  function removeFeature(idx: number) {
-    const updated = [...features];
-    updated.splice(idx, 1);
-    setFeatures(updated);
-  }
-  function handleFeatureChange(
-    idx: number,
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) {
-    const { name, value } = e.target;
-    const updated = [...features];
-    (updated[idx] as any)[name] = value;
-    setFeatures(updated);
-  }
-  function buildFeaturesHTML(items: FeatureItem[]): string {
-    if (!items || items.length === 0) return "";
-    let html = "<ul>\n";
-    items.forEach((f) => {
-      html += `  <li><img src="${f.iconUrl}" /> ${f.text}</li>\n`;
-    });
-    html += "</ul>";
-    return html;
-  }
-
-  /* --------------------------------------------
-   * Lo que aprenderás => multiple bullet points
-   * -------------------------------------------- */
-  function addLearningPoint() {
-    setLearningPoints((prev) => [...prev, ""]);
-  }
-  function removeLearningPoint(idx: number) {
-    const updated = [...learningPoints];
-    updated.splice(idx, 1);
-    setLearningPoints(updated);
-  }
-  function handleLearningPointChange(
-    idx: number,
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) {
-    const updated = [...learningPoints];
-    updated[idx] = e.target.value;
-    setLearningPoints(updated);
-  }
-  function buildLearningPointsString(points: string[]): string {
-    return points.join("\n\n"); // separate by blank lines
-  }
-
-  /* --------------------------------------------
-   * Submit
-   * -------------------------------------------- */
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const course_includes = buildFeaturesHTML(features);
-      const compiledLearning = buildLearningPointsString(learningPoints);
-      const { ...fieldsToSave } = course;
-      (fieldsToSave as any).course_includes = course_includes;
-      (fieldsToSave as any).what_you_ll_learn = compiledLearning;
-
-      if (isEditMode && course.id) {
-        const { error: updErr } = await supabase
-          .from("courses")
-          .update(fieldsToSave)
-          .eq("id", course.id);
-        if (updErr) {
-          alert("Error actualizando el curso: " + updErr.message);
-          return;
-        }
-        await saveSectionsAndLessons(course.id);
-        alert("Curso actualizado exitosamente");
-      } else {
-        const { data: newCourse, error: insErr } = await supabase
-          .from("courses")
-          .insert(fieldsToSave)
-          .select()
-          .single();
-        if (insErr || !newCourse) {
-          alert("Error creando el curso: " + insErr?.message);
-          return;
-        }
-        await saveSectionsAndLessons(newCourse.id);
-        alert("Curso creado exitosamente");
-      }
-    } finally {
-      setLoading(false);
-    }
-  }
-
   async function saveSectionsAndLessons(course_id: string) {
+    // same logic
     for (const sec of sections) {
       let sectionId = sec.id;
       if (!sec.id) {
+        // insert
         const { data: newSec, error: secErr } = await supabase
           .from("course_contents")
           .insert({
@@ -494,6 +489,7 @@ export default function AddOrEditCoursePage() {
         }
         sectionId = newSec.id;
       } else {
+        // update
         const { error: secUpdErr } = await supabase
           .from("course_contents")
           .update({
@@ -506,9 +502,11 @@ export default function AddOrEditCoursePage() {
           continue;
         }
       }
+      // lessons
       for (const les of sec.lessons) {
         const totalSec = les.minutes * 60 + les.seconds;
         if (!les.id) {
+          // insert
           const { error: insLesErr } = await supabase.from("course_contents").insert({
             course_id,
             type: "lecture",
@@ -523,6 +521,7 @@ export default function AddOrEditCoursePage() {
             console.error("Error inserting lesson:", insLesErr);
           }
         } else {
+          // update
           const { error: updLesErr } = await supabase
             .from("course_contents")
             .update({
@@ -541,12 +540,96 @@ export default function AddOrEditCoursePage() {
     }
   }
 
+  // Instructors
+  function handleInstructorSelection(e: React.ChangeEvent<HTMLSelectElement>) {
+    setCourse((prev) => ({ ...prev, instructor_id: e.target.value }));
+  }
+  function openCreateInstructorPopup() {
+    setEditingInstructor(null);
+    setShowInstructorPopup(true);
+  }
+  function openEditInstructorPopup() {
+    if (!course.instructor_id) return;
+    const found = instructors.find((inst) => inst.id === course.instructor_id);
+    if (!found) return;
+    setEditingInstructor(found);
+    setShowInstructorPopup(true);
+  }
+  async function handleInstructorSaved(newId: string) {
+    setShowInstructorPopup(false);
+    await fetchAllInstructors();
+    setCourse((prev) => ({ ...prev, instructor_id: newId }));
+  }
+
+  // Submit the entire course
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      // build HTML for "Este curso incluye"
+      const course_includes = buildFeaturesHTML(features);
+
+      // "Lo que aprenderás"
+      const compiledLearning = buildLearningPointsString(learningPoints);
+
+      // Requirements => bullet list
+      const reqHTML = buildRequirementsHTML(requirementsPoints);
+
+      // Description => multi paragraphs
+      const descHTML = buildDescriptionHTML(descParas);
+
+      const { ...fieldsToSave } = course;
+      (fieldsToSave as any).course_includes = course_includes;
+      (fieldsToSave as any).what_you_ll_learn = compiledLearning;
+      (fieldsToSave as any).requirements = reqHTML;
+      (fieldsToSave as any).description_long = descHTML;
+
+      if (isEditMode && course.id) {
+        // update
+        const { error: updErr } = await supabase
+          .from("courses")
+          .update(fieldsToSave)
+          .eq("id", course.id);
+        if (updErr) {
+          alert("Error actualizando el curso: " + updErr.message);
+          return;
+        }
+        await saveSectionsAndLessons(course.id);
+        alert("Curso actualizado exitosamente");
+      } else {
+        // create
+        const { data: newCourse, error: insErr } = await supabase
+          .from("courses")
+          .insert(fieldsToSave)
+          .select()
+          .single();
+        if (insErr || !newCourse) {
+          alert("Error creando el curso: " + insErr?.message);
+          return;
+        }
+        await saveSectionsAndLessons(newCourse.id);
+        alert("Curso creado exitosamente");
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
   function goBackAdmin() {
     router.push("/admin");
   }
 
   return (
     <div className={styles.wrapper}>
+      {showInstructorPopup && (
+        <InstructorPopup
+          show={showInstructorPopup}
+          instructor={editingInstructor}
+          onClose={() => setShowInstructorPopup(false)}
+          onSaved={handleInstructorSaved}
+        />
+      )}
+
       <button onClick={goBackAdmin} className={styles.backAdminBtn}>
         Volver al Panel Admin
       </button>
@@ -558,7 +641,7 @@ export default function AddOrEditCoursePage() {
         <p>Cargando...</p>
       ) : (
         <form onSubmit={handleSubmit} className={styles.formArea}>
-          {/* COURSE INFO CARD */}
+          {/* Course Info */}
           <div className={styles.card}>
             <h2 className={styles.cardTitle}>Información del Curso</h2>
 
@@ -585,10 +668,10 @@ export default function AddOrEditCoursePage() {
             </div>
 
             <div className={styles.fieldGroup}>
-              <label>Descripción</label>
+              <label>Descripción Breve</label>
               <textarea
                 name="description"
-                rows={4}
+                rows={3}
                 value={course.description}
                 onChange={handleCourseChange}
                 required
@@ -605,7 +688,45 @@ export default function AddOrEditCoursePage() {
               />
             </div>
 
-            {/* Original text-based thumbnail URL */}
+            {/* Instructor */}
+            <div className={styles.fieldGroup}>
+              <label>Instructor</label>
+              <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+                <select
+                  name="instructor_id"
+                  value={course.instructor_id || ""}
+                  onChange={handleInstructorSelection}
+                >
+                  <option value="">-- Seleccionar un Instructor --</option>
+                  {instructors.map((inst) => (
+                    <option key={inst.id} value={inst.id}>
+                      {inst.full_name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (course.instructor_id) {
+                      openEditInstructorPopup();
+                    } else {
+                      openCreateInstructorPopup();
+                    }
+                  }}
+                  style={{
+                    border: "1px solid blue",
+                    backgroundColor: "transparent",
+                    color: "blue",
+                    padding: "0.4rem 0.8rem",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                  }}
+                >
+                  {course.instructor_id ? "Editar Instructor" : "Crear Instructor"}
+                </button>
+              </div>
+            </div>
+
             <div className={styles.fieldGroup}>
               <label>Imagen (Thumbnail URL)</label>
               <input
@@ -617,7 +738,7 @@ export default function AddOrEditCoursePage() {
               />
             </div>
 
-            {/* New image upload with custom button and preview */}
+            {/* custom file upload */}
             <div className={styles.fieldGroup}>
               <label>Subir Imagen (750x500)</label>
               <div className={styles.fileUploadWrapper}>
@@ -689,31 +810,14 @@ export default function AddOrEditCoursePage() {
                 ))}
               </select>
             </div>
-
-            {/* Hidden old textarea for what_you_ll_learn */}
-            <textarea
-              name="what_you_ll_learn"
-              rows={5}
-              value={course.what_you_ll_learn || ""}
-              onChange={handleCourseChange}
-              style={{ display: "none" }}
-            />
           </div>
 
-          {/* New: "Lo que aprenderás" bullet points */}
+          {/* "Lo que aprenderás" */}
           <div className={styles.card}>
             <h2 className={styles.cardTitle}>Lo que aprenderás</h2>
-            <p style={{ fontStyle: "italic", fontSize: "0.9rem" }}>
-              (Cada punto sugerido máx. 64 caracteres; no pasa nada si excede)
-            </p>
             {learningPoints.map((point, idx) => (
               <div key={idx} className={styles.learningRow}>
-                <label>
-                  Punto {idx + 1}{" "}
-                  <span style={{ fontSize: "0.8rem", marginLeft: "5px" }}>
-                    ({point.length}/64)
-                  </span>
-                </label>
+                <label>Punto {idx + 1}</label>
                 <input
                   type="text"
                   value={point}
@@ -737,14 +841,68 @@ export default function AddOrEditCoursePage() {
             </button>
           </div>
 
-          {/* "Este curso incluye" (features) */}
+          {/* Requisitos => bullet points */}
           <div className={styles.card}>
-            <h2 className={styles.cardTitle}>
-              "Este curso incluye" (Características)
-            </h2>
-            {features.length === 0 && (
-              <p style={{ color: "#666" }}>No hay características añadidas.</p>
-            )}
+            <h2 className={styles.cardTitle}>Requisitos</h2>
+            {requirementsPoints.map((req, idx) => (
+              <div key={idx} className={styles.learningRow}>
+                <label>Requisito {idx + 1}</label>
+                <input
+                  type="text"
+                  value={req}
+                  onChange={(e) => handleRequirementChange(idx, e)}
+                />
+                <button
+                  type="button"
+                  className={styles.removeBtn}
+                  onClick={() => removeRequirementPoint(idx)}
+                >
+                  Eliminar
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={addRequirementPoint}
+              className={styles.addLessonBtn}
+            >
+              + Agregar Requisito
+            </button>
+          </div>
+
+          {/* Descripción => multi paragraphs */}
+          <div className={styles.card}>
+            <h2 className={styles.cardTitle}>Descripción Larga</h2>
+            {descParas.map((para, idx) => (
+              <div key={idx} className={styles.learningRow}>
+                <label>Párrafo {idx + 1}</label>
+                <textarea
+                  rows={3}
+                  value={para}
+                  onChange={(e) => handleDescParaChange(idx, e)}
+                />
+                <button
+                  type="button"
+                  className={styles.removeBtn}
+                  onClick={() => removeDescPara(idx)}
+                >
+                  Eliminar
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={addDescPara}
+              className={styles.addLessonBtn}
+            >
+              + Agregar Párrafo
+            </button>
+          </div>
+
+          {/* "Este curso incluye" */}
+          <div className={styles.card}>
+            <h2 className={styles.cardTitle}>"Este curso incluye" (Características)</h2>
+            {features.length === 0 && <p>No hay características añadidas.</p>}
             {features.map((feat, idx) => (
               <div key={idx} className={styles.featureRow}>
                 <div className={styles.featureCol}>
@@ -809,7 +967,6 @@ export default function AddOrEditCoursePage() {
                       name="title"
                       value={section.title}
                       onChange={(e) => handleSectionChange(secIndex, e)}
-                      required
                     />
                   </div>
                   <div>
@@ -830,7 +987,6 @@ export default function AddOrEditCoursePage() {
                     Eliminar Sección
                   </button>
                 </div>
-
                 <div className={styles.lessonsWrapper}>
                   {section.lessons.map((lesson, lesIndex) => (
                     <div key={lesIndex} className={styles.lessonCard}>
@@ -841,10 +997,7 @@ export default function AddOrEditCoursePage() {
                             type="text"
                             name="title"
                             value={lesson.title}
-                            onChange={(e) =>
-                              handleLessonChange(secIndex, lesIndex, e)
-                            }
-                            required
+                            onChange={(e) => handleLessonChange(secIndex, lesIndex, e)}
                           />
                         </div>
                         <div>
@@ -853,9 +1006,7 @@ export default function AddOrEditCoursePage() {
                             type="number"
                             name="order_index"
                             value={lesson.order_index}
-                            onChange={(e) =>
-                              handleLessonChange(secIndex, lesIndex, e)
-                            }
+                            onChange={(e) => handleLessonChange(secIndex, lesIndex, e)}
                           />
                         </div>
                       </div>
@@ -866,9 +1017,7 @@ export default function AddOrEditCoursePage() {
                             type="text"
                             name="youtube_link"
                             value={lesson.youtube_link}
-                            onChange={(e) =>
-                              handleLessonChange(secIndex, lesIndex, e)
-                            }
+                            onChange={(e) => handleLessonChange(secIndex, lesIndex, e)}
                           />
                         </div>
                         <div>
@@ -878,9 +1027,7 @@ export default function AddOrEditCoursePage() {
                               type="number"
                               name="minutes"
                               value={lesson.minutes}
-                              onChange={(e) =>
-                                handleLessonChange(secIndex, lesIndex, e)
-                              }
+                              onChange={(e) => handleLessonChange(secIndex, lesIndex, e)}
                               style={{ width: "60px" }}
                             />
                             <span>:</span>
@@ -888,9 +1035,7 @@ export default function AddOrEditCoursePage() {
                               type="number"
                               name="seconds"
                               value={lesson.seconds}
-                              onChange={(e) =>
-                                handleLessonChange(secIndex, lesIndex, e)
-                              }
+                              onChange={(e) => handleLessonChange(secIndex, lesIndex, e)}
                               style={{ width: "60px" }}
                             />
                           </div>
@@ -902,9 +1047,7 @@ export default function AddOrEditCoursePage() {
                             type="checkbox"
                             name="paid"
                             checked={lesson.paid}
-                            onChange={(e) =>
-                              handleLessonChange(secIndex, lesIndex, e)
-                            }
+                            onChange={(e) => handleLessonChange(secIndex, lesIndex, e)}
                           />
                           &nbsp;¿Esta lección es de pago?
                         </label>
@@ -947,3 +1090,6 @@ export default function AddOrEditCoursePage() {
     </div>
   );
 }
+
+// The instructor popup is now in a separate file "InstructorPopup.tsx"
+// We do not define it here anymore.
