@@ -8,6 +8,9 @@ import AdditionalDetailsSection from "./AdditionalDetailsSection";
 import CourseSidebar from "./CourseSidebar";
 import styles from "./page.module.css";
 
+// If you see type errors regarding "params", you can use the following signature:
+// export default async function CoursePage({ params }: any) { ... }
+
 export default async function CoursePage({
   params,
 }: {
@@ -15,7 +18,7 @@ export default async function CoursePage({
 }) {
   const { slug } = params;
 
-  // Fetch from Supabase
+  // Fetch the course (including new columns like requirements, description_long and instructor_id)
   const { data, error } = await supabase
     .from("courses")
     .select("*")
@@ -27,7 +30,6 @@ export default async function CoursePage({
     return notFound();
   }
 
-  // 'data' is your course row
   const course = data;
 
   return (
@@ -37,15 +39,13 @@ export default async function CoursePage({
       <div className={styles.mainContainer}>
         <div className={styles.leftColumn}>
           <StaticSection whatYoullLearn={course.what_you_ll_learn} />
-
           <CourseContentSection course_id={course.id} />
 
-          {/* If there's an instructor, show it */}
           {course.instructor_id && (
             <InstructorSection instructorId={course.instructor_id} />
           )}
 
-          {/* Requirements / Description container */}
+          {/* Additional details for "Requisitos" and "Descripción" */}
           <AdditionalDetailsSection
             requirements={course.requirements}
             descriptionLong={course.description_long}
