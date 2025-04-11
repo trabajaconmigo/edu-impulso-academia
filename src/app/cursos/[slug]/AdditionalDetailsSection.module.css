@@ -1,0 +1,18 @@
+/* AdditionalDetailsSection.module.css */
+
+.container {
+  background-color: #fff; /* White background */
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+  /* No border, so it blends into the background of the page if you like */
+}
+
+.sectionBlock {
+  margin-bottom: 2rem;
+}
+
+.title {
+  font-size: 1.6rem;
+  margin-bottom: 1rem;
+  color: #1c1d1f;
+}
