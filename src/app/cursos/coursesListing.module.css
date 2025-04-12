@@ -2,6 +2,7 @@
     max-width: 1200px; /* Slightly wider */
     margin: 2rem auto 4rem auto; /* More bottom margin */
     padding: 0 1rem;
+    
   }
   
   .title {
@@ -10,6 +11,8 @@
     font-weight: bold;
     margin-bottom: 2.5rem;
     color: #1c1d1f; /* Darker text */
+    margin-top: -22px;
+    
   }
   
   .noCourses {
@@ -117,3 +120,202 @@
     padding-top: 0.5rem; /* Space above price */
   }
   
+
+  /* Existing container, title, grid, etc. (unchanged) */
+
+.container {
+  max-width: 1200px; /* Slightly wider */
+  margin: 2rem auto 4rem auto; /* More bottom margin */
+  padding: 0 1rem;
+}
+
+.title {
+  text-align: center;
+  font-size: 2.2rem; /* Slightly smaller */
+  font-weight: bold;
+  margin-bottom: 2.5rem;
+  color: #1c1d1f; /* Darker text */
+  margin-bottom: 18px;
+}
+
+.noCourses {
+  text-align: center;
+  font-size: 1.1rem;
+  color: #555;
+  margin-top: 3rem;
+}
+
+.grid {
+  display: grid;
+  /* More responsive grid: min 280px, max 1fr */
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 2rem; /* Increased gap */
+}
+
+.cardLink {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  height: 100%;
+}
+
+.card {
+  background-color: #fff;
+  border: 1px solid #d1d7dc;
+  border-radius: 4px;
+  overflow: hidden;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.cardImageWrapper {
+  width: 100%;
+  padding-top: 56.25%; /* 16:9 Aspect Ratio */
+  position: relative;
+  overflow: hidden;
+}
+
+.cardImage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.card:hover .cardImage {
+  transform: scale(1.05);
+}
+
+.cardContent {
+  padding: 1rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.cardTitle {
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin: 0 0 0.5rem 0;
+  line-height: 1.3;
+  color: #1c1d1f;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-height: 2.6em;
+}
+
+.cardDesc {
+  font-size: 0.9rem;
+  color: #56575b;
+  margin: 0 0 1rem 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-grow: 1;
+  min-height: 4.2em;
+}
+
+.cardPrice {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #1c1d1f;
+  margin-top: auto;
+  padding-top: 0.5rem;
+}
+
+/* ===== New Category Filter Styles ===== */
+
+.categoryFilterContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+/* Minimalistic arrow buttons using purple app color */
+.arrowButton {
+  background: transparent;
+  border: none;
+  color: #a435f0; /* purple app color */
+  font-size: 1.4rem;
+  cursor: pointer;
+  display: none; /* hidden by default; will be shown conditionally via React */
+  padding: 0 0.5rem;
+}
+
+/* Show arrows only on desktop (min-width: 768px) */
+@media (min-width: 768px) {
+  .arrowButton {
+    display: inline-block;
+  }
+}
+
+/* The horizontal row of category buttons */
+.categoryRow {
+  display: flex;
+  overflow-x: auto;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  flex: 1;
+  scrollbar-width: thin;
+}
+.categoryRow::-webkit-scrollbar {
+  height: 4px;
+}
+.categoryRow::-webkit-scrollbar-thumb {
+  background-color: #a435f0;
+  border-radius: 2px;
+}
+.categoryRow::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* The default category button style */
+.categoryBtn {
+  background-color: #f0f0f0;
+  color: #333;
+  border: none;
+  border-radius: 20px;
+  padding: 0.3rem 1rem;
+  cursor: pointer;
+  white-space: nowrap;
+  font-size: 0.9rem;
+}
+.categoryBtn:hover {
+  background-color: #e4e4e4;
+}
+
+/* Active category button */
+.activeCategoryBtn {
+  background-color: #a435f0;
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 0.3rem 1rem;
+  cursor: pointer;
+  white-space: nowrap;
+  font-size: 0.9rem;
+}
+.activeCategoryBtn:hover {
+  background-color: #902ecc;
+}
