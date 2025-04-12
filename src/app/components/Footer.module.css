@@ -1,9 +1,79 @@
-/* app/components/Footer.module.css */
-
 .footer {
-    background-color: #f8f8f8;
-    padding: 1rem 2rem;
-    text-align: center;
-    border-top: 1px solid #ccc;
-  }
-  
+  background-color: #f8f8f8;
+  border-top: 1px solid #ccc;
+  padding: 2rem 1rem 1rem 1rem;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+/* Container for the main footer sections */
+.footerContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 2.5rem;
+}
+
+/* Each section in the grid */
+.footerSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Headings for each section */
+.footerSection h4 {
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  color: #1c1d1f;
+}
+
+/* Quick link lists */
+.linkList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.linkList li {
+  margin: 0.3rem 0;
+}
+
+.linkList li a {
+  color: #333;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.linkList li a:hover {
+  color: #a435f0; /* your purple app color for hover */
+}
+
+/* Social icons row */
+.socialIcons {
+  display: flex;
+  gap: 1rem;
+}
+
+/* If using Font Awesome icons, ensure you have them loaded:
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" /> 
+*/
+.socialIcons a {
+  color: #555;
+  font-size: 1.2rem;
+  transition: color 0.2s ease;
+}
+
+.socialIcons a:hover {
+  color: #a435f0; /* your purple color on hover */
+}
+
+/* Bottom row with copyright */
+.footerBottom {
+  margin-top: 2rem;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #777;
+}
