@@ -15,7 +15,7 @@ export default function Footer() {
         <div className={styles.footerSection}>
           <h4>Sobre Nosotros</h4>
           <p>
-            Edu Impulso Academia es una plataforma de cursos en línea 
+            Escuela 360 es una plataforma de cursos en línea 
             dedicada a impulsar el aprendizaje de manera flexible 
             y accesible, ofreciendo conocimientos de alta calidad 
             para todos.
@@ -78,7 +78,7 @@ export default function Footer() {
       {/* Bottom Footer Row */}
       <div className={styles.footerBottom}>
         <p>
-          © {new Date().getFullYear()} Edu Impulso Academia. Todos los derechos
+          © {new Date().getFullYear()} Escuela360.com.mx. Todos los derechos
           reservados.
         </p>
       </div>

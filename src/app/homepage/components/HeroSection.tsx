@@ -18,7 +18,7 @@ export default function HeroSection() {
         />
       </picture>
       <div className={styles.heroContent}>
-        <h1>Bienvenido a Edu Impulso Academia</h1>
+        <h1>Bienvenido a Escuela 360</h1>
         <p>La mejor plataforma de cursos en línea para expandir tus habilidades.</p>
         <Link href="/cursos">
           <button className={styles.exploreBtn}>Explorar Cursos</button>

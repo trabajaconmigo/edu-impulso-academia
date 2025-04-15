@@ -2,9 +2,17 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image"; // Import Next.js Image component
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import { FaUser, FaSignOutAlt, FaSignInAlt, FaUserPlus, FaBars, FaTimes } from "react-icons/fa";
+import {
+  FaUser,
+  FaSignOutAlt,
+  FaSignInAlt,
+  FaUserPlus,
+  FaBars,
+  FaTimes,
+} from "react-icons/fa";
 import styles from "./Navbar.module.css";
 
 interface ProfileData {
@@ -14,8 +22,8 @@ interface ProfileData {
 
 interface EduNavbarUser {
   email?: string | null;
-  name?: string; // e.g. from full_name or fallback to email
-  photo?: string; // final photo url
+  name?: string; // e.g., from full_name or fallback to email
+  photo?: string; // final photo URL
 }
 
 export default function EduNavbar() {
@@ -25,7 +33,7 @@ export default function EduNavbar() {
   const [user, setUser] = useState<EduNavbarUser | null>(null);
   const [menuOpen, setMenuOpen] = useState(false); // toggles the sidebar
 
-  // On mount => check session + fetch profile
+  // On mount: check session + fetch profile
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
       const session = data.session;
@@ -33,7 +41,7 @@ export default function EduNavbar() {
         const userEmail = session.user.email || "";
         const userId = session.user.id;
 
-        // check "profiles" table
+        // Check "profiles" table
         const { data: profile, error } = await supabase
           .from("profiles")
           .select("full_name, profile_img")
@@ -52,9 +60,10 @@ export default function EduNavbar() {
           }
         }
 
-        // if user logged in with Google, user_metadata might contain an avatar
+        // If user logged in with Google, user_metadata might contain an avatar
         const googlePic =
-          session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture;
+          session.user.user_metadata?.avatar_url ||
+          session.user.user_metadata?.picture;
         if (googlePic) {
           photoUrl = googlePic;
         }
@@ -70,7 +79,7 @@ export default function EduNavbar() {
     });
   }, []);
 
-  // close sidebar if user clicks outside
+  // Close sidebar if user clicks outside
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (
@@ -96,10 +105,16 @@ export default function EduNavbar() {
 
   return (
     <header className={styles.eduNavbar}>
-      {/* Left side: logo */}
+      {/* Left side: logo as an image */}
       <div className={styles.navLeft}>
         <Link href="/" className={styles.logo}>
-          EDU IMPULSO
+          <Image
+            src="/escuela360_logo.jpg"
+            alt="Logo de Escuela360"
+            width={71}        
+            height={40}       
+            priority           
+          />
         </Link>
       </div>
 
@@ -115,13 +130,13 @@ export default function EduNavbar() {
 
       {/* Right side */}
       <div className={styles.navRight}>
-        {/* If user is not logged => "Iniciar Sesión" AND show hamburger */}
+        {/* If user is not logged in => "Iniciar Sesión" and hamburger icon on mobile */}
         {!user && (
           <>
             <Link href="/auth/login" className={styles.loginButton}>
               Iniciar Sesión
             </Link>
-            {/* Only show hamburger on mobile if user not logged */}
+            {/* Only show hamburger on mobile if user not logged in */}
             <button
               className={styles.mobileMenuIcon}
               onClick={() => setMenuOpen((prev) => !prev)}
@@ -132,7 +147,7 @@ export default function EduNavbar() {
           </>
         )}
 
-        {/* If user is logged => show user image (toggles sidebar), no hamburger */}
+        {/* If user is logged in: show user image (toggles sidebar), no hamburger */}
         {user && (
           <button
             className={styles.profileBtn}
