@@ -1,0 +1,29 @@
+.stickyBasket {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: #a435f0;  /* Purple app color */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+    z-index: 1000;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+  
+  .visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  .cartIcon {
+    color: #fff;  /* White icon */
+    font-size: 1.5rem;
+  }
+  
