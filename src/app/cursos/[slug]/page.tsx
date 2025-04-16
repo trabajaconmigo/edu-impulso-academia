@@ -1,7 +1,4 @@
-"use client";
-
 import { notFound } from "next/navigation";
-import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import Hero from "./Hero";
 import StaticSection from "./StaticSection";
@@ -9,7 +6,7 @@ import CourseContentSection from "./CourseContentSection";
 import InstructorSection from "./InstructorSection";
 import AdditionalDetailsSection from "./AdditionalDetailsSection";
 import CourseSidebar from "./CourseSidebar";
-import StickyBasketWrapper from "./StickyBasketWrapper"; // New wrapper for sticky basket
+import StickyBasketWrapper from "./StickyBasketWrapper";
 import styles from "./page.module.css";
 
 interface Course {
@@ -34,30 +31,22 @@ interface CoursePageProps {
   params: { slug: string };
 }
 
-export default function CoursePage({ params }: CoursePageProps) {
+export default async function CoursePage({ params }: CoursePageProps) {
   const { slug } = params;
-  const [course, setCourse] = useState<Course | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchCourse() {
-      const { data, error } = await supabase
-        .from("courses")
-        .select("*")
-        .eq("slug", slug)
-        .single();
-      if (error || !data) {
-        console.error("Error fetching course:", error);
-      } else {
-        setCourse(data as Course);
-      }
-      setLoading(false);
-    }
-    fetchCourse();
-  }, [slug]);
+  // Fetch the course (including new columns)
+  const { data, error } = await supabase
+    .from("courses")
+    .select("*")
+    .eq("slug", slug)
+    .single();
 
-  if (loading) return <div>Cargando...</div>;
-  if (!course) return notFound();
+  if (error || !data) {
+    console.error("Error fetching course:", error);
+    return notFound();
+  }
+
+  const course = data as Course;
 
   return (
     <>
@@ -83,11 +72,13 @@ export default function CoursePage({ params }: CoursePageProps) {
         </div>
       </div>
 
-      {/* Render the sticky basket wrapper which handles purchase-check */}
-      <StickyBasketWrapper 
-        courseId={course.id} 
-        coursePrice={course.price} 
-        visibleThreshold={400} 
+      {/* Render StickyBasketWrapper to control the sticky "buy" button on mobile.
+          It will check if the user has purchased the course and, if not, render the basket.
+          Replace your purchase-check logic as needed. */}
+      <StickyBasketWrapper
+        courseId={course.id}
+        coursePrice={course.price}
+        visibleThreshold={400}
       />
     </>
   );

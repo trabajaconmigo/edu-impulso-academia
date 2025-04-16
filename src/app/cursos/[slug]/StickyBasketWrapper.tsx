@@ -18,6 +18,7 @@ export default function StickyBasketWrapper({
   const [hasPurchased, setHasPurchased] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Check if the current user has purchased this course
   useEffect(() => {
     async function checkPurchase() {
       const { data: sessionData } = await supabase.auth.getSession();
@@ -42,6 +43,7 @@ export default function StickyBasketWrapper({
     checkPurchase();
   }, [courseId]);
 
+  // Define the buy handler
   const handleBuy = () => {
     const amountInCents = coursePrice * 100;
     window.location.href = `/checkout?courseId=${courseId}&amount=${amountInCents}`;
@@ -55,8 +57,6 @@ export default function StickyBasketWrapper({
       onBuy={handleBuy}
       hasPurchased={hasPurchased}
       visibleThreshold={visibleThreshold}
-      courseId={courseId}
-      coursePrice={coursePrice}
     />
   );
 }
