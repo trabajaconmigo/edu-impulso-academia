@@ -9,7 +9,7 @@ import CourseContentSection from "./CourseContentSection";
 import InstructorSection from "./InstructorSection";
 import AdditionalDetailsSection from "./AdditionalDetailsSection";
 import CourseSidebar from "./CourseSidebar";
-import StickyBasket from "./StickyBasket"; // StickyBasket saved in the same folder
+import StickyBasketWrapper from "./StickyBasketWrapper"; // New wrapper for sticky basket
 import styles from "./page.module.css";
 
 interface Course {
@@ -30,12 +30,15 @@ interface Course {
   description_long?: string | null;  // HTML for "Descripción Larga"
 }
 
-export default function CoursePage({ params }: { params: { slug: string } }) {
+interface CoursePageProps {
+  params: { slug: string };
+}
+
+export default function CoursePage({ params }: CoursePageProps) {
   const { slug } = params;
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch the course from Supabase on mount
   useEffect(() => {
     async function fetchCourse() {
       const { data, error } = await supabase
@@ -52,18 +55,6 @@ export default function CoursePage({ params }: { params: { slug: string } }) {
     }
     fetchCourse();
   }, [slug]);
-
-  // Dummy flag for purchase (replace with your real purchase check)
-  const hasPurchased = false;
-
-  // Define the buy action – for example, redirect to checkout
-  const handleBuyCourse = () => {
-    if (course) {
-      // Multiply price by 100 for Stripe (amount in cents)
-      const priceInCents = course.price * 100;
-      window.location.href = `/checkout?courseId=${course.id}&amount=${priceInCents}`;
-    }
-  };
 
   if (loading) return <div>Cargando...</div>;
   if (!course) return notFound();
@@ -92,10 +83,10 @@ export default function CoursePage({ params }: { params: { slug: string } }) {
         </div>
       </div>
 
-      {/* Render the sticky basket only on mobile if the course is not already purchased */}
-      <StickyBasket 
-        onBuy={handleBuyCourse} 
-        hasPurchased={hasPurchased} 
+      {/* Render the sticky basket wrapper which handles purchase-check */}
+      <StickyBasketWrapper 
+        courseId={course.id} 
+        coursePrice={course.price} 
         visibleThreshold={400} 
       />
     </>

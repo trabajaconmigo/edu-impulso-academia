@@ -8,6 +8,8 @@ interface StickyBasketProps {
   onBuy: () => void;
   hasPurchased: boolean;
   visibleThreshold?: number;
+  courseId: string;
+  coursePrice: number;
 }
 
 export default function StickyBasket({
@@ -18,7 +20,7 @@ export default function StickyBasket({
   const [visible, setVisible] = useState(false);
   const [isMobile, setIsMobile] = useState<boolean>(false);
 
-  // Check if the viewport is mobile (<768px)
+  // Check viewport width on mount and on window resize
   useEffect(() => {
     const updateIsMobile = () => {
       setIsMobile(window.innerWidth < 768);
@@ -34,7 +36,8 @@ export default function StickyBasket({
       setVisible(window.pageYOffset > visibleThreshold);
     };
     window.addEventListener("scroll", handleScroll);
-    handleScroll(); // initial check
+    // Initial check
+    handleScroll();
     return () => window.removeEventListener("scroll", handleScroll);
   }, [visibleThreshold]);
 
