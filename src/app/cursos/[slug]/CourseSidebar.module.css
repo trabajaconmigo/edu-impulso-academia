@@ -25,7 +25,7 @@
     margin: 0 auto;
     left: -18;
     right: 0;
-    overflow-x: hidden;
+    overflow-x: hidden;   
   }
 }
 
@@ -156,4 +156,31 @@
   height: 20px;
   margin-right: 6px;
   object-fit: contain;
+}
+
+/* iPad PORTRAIT (768px to 1024px tall) */
+@media screen and (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+  .sidebar {
+    position: fixed;
+    top: 195px;           /* “stick” it at 55px from the top, or adjust as needed */
+    left: 380;
+    right: 00;
+    margin: 0 auto;      /* horizontally center if desired */
+    margin-top: 0 !important; /* override the default margin-top */
+    /* You can also set a max-width if you don’t want it to span the entire width */
+    max-width: 350px;
+  }
+}
+
+/* iPad LANDSCAPE (768px to 1024px wide, but “landscape” orientation) */
+@media screen and (min-width: 768px) and (max-width: 1025px) and (orientation: landscape) {
+  .sidebar {
+    position: fixed;
+    top: -25px;          /* move it 120px down from the top */
+    left: 650;
+    right: 00;
+    margin: 0 auto;      /* horizontally center if desired */
+    margin-top: 100 !important;
+    max-width: 350px;
+  }
 }
