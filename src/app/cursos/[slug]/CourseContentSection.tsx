@@ -1,3 +1,4 @@
+// src/app/cursos/[slug]/CourseContentSection.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -14,7 +15,7 @@ interface CourseContent {
   duration?: number; // in seconds
   order_index: number;
   parent_section_id?: number | null;
-  paid?: boolean; // bool field from your DB indicating if the lecture is paid
+  paid?: boolean; // indicates if the lecture is paid
 }
 
 interface CourseContentSectionProps {
@@ -27,7 +28,7 @@ const LOCK_ICON = (
     width="16"
     height="16"
     viewBox="0 0 24 24"
-    fill="#999"      // The fill color is gray
+    fill="#999"
     xmlns="http://www.w3.org/2000/svg"
   >
     <path
@@ -45,10 +46,8 @@ const CourseContentSection: React.FC<CourseContentSectionProps> = ({ course_id }
   const [summary, setSummary] = useState({
     totalSections: 0,
     totalLectures: 0,
-    totalDuration: 0, // in seconds
+    totalDuration: 0,
   });
-
-  // Whether current user purchased this course
   const [hasPurchase, setHasPurchase] = useState<boolean>(false);
 
   useEffect(() => {
@@ -58,10 +57,13 @@ const CourseContentSection: React.FC<CourseContentSectionProps> = ({ course_id }
         .select("*")
         .eq("course_id", course_id)
         .order("order_index", { ascending: true });
+
       if (error) {
         console.error("Error fetching course content:", error.message);
       } else if (data) {
         const contentData = data as CourseContent[];
+
+        // Compute summary
         let totalSections = 0;
         let totalLectures = 0;
         let totalDuration = 0;
@@ -73,18 +75,24 @@ const CourseContentSection: React.FC<CourseContentSectionProps> = ({ course_id }
           }
         });
         setSummary({ totalSections, totalLectures, totalDuration });
+
+        // Store contents
         setContents(contentData);
+
+        // <-- NEW: open the very first section by default -->
+        const firstSection = contentData.find(item => item.type === "section");
+        if (firstSection) {
+          setExpandedSections([firstSection.id]);
+        }
       }
     }
 
     async function checkPurchase() {
-      // 1) Get current user
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
       if (user) {
-        // 2) Check if there's a purchase row for this user & course
         const { data: purchaseData, error: purchaseError } = await supabase
           .from("purchases")
           .select("id")
@@ -92,13 +100,8 @@ const CourseContentSection: React.FC<CourseContentSectionProps> = ({ course_id }
           .eq("course_id", course_id)
           .single();
 
-        if (!purchaseError && purchaseData) {
-          setHasPurchase(true);
-        } else {
-          setHasPurchase(false);
-        }
+        setHasPurchase(!purchaseError && !!purchaseData);
       } else {
-        // user not logged in => no purchase
         setHasPurchase(false);
       }
     }
@@ -107,45 +110,34 @@ const CourseContentSection: React.FC<CourseContentSectionProps> = ({ course_id }
     checkPurchase();
   }, [course_id]);
 
-  // Helper to format seconds as "Xh Ym"
+  // Format seconds as "Xh Ym"
   const formatDuration = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     return `${hours}h ${minutes}m`;
   };
 
-  // Filter sections from content
   const sections = contents.filter((item) => item.type === "section");
-
-  // Get lectures under a given section
   const getLecturesForSection = (sectionId: number) =>
     contents.filter((item) => item.type === "lecture" && item.parent_section_id === sectionId);
 
-  // Expand/collapse logic
   const toggleSection = (sectionId: number) => {
-    setExpandedSections((prev) => {
-      if (prev.includes(sectionId)) {
-        return prev.filter((id) => id !== sectionId);
-      } else {
-        return [...prev, sectionId];
-      }
-    });
+    setExpandedSections((prev) =>
+      prev.includes(sectionId) ? prev.filter((id) => id !== sectionId) : [...prev, sectionId]
+    );
   };
 
-  function handleLectureClick(lecture: CourseContent) {
-    // If paid & no purchase => block
+  const handleLectureClick = (lecture: CourseContent) => {
     if (lecture.paid && !hasPurchase) {
       alert("Este contenido es de pago. Por favor compra el curso para acceder.");
       return;
     }
-    // Otherwise open video
     if (lecture.youtube_link) {
       setPopupVideo(lecture.youtube_link);
     }
-  }
+  };
 
-  // Render an inline SVG lock icon only if paid + no purchase
-  function renderLockIcon(lecture: CourseContent) {
+  const renderLockIcon = (lecture: CourseContent) => {
     if (lecture.paid && !hasPurchase) {
       return (
         <span style={{ marginLeft: "6px", display: "inline-flex", alignItems: "center" }}>
@@ -153,8 +145,8 @@ const CourseContentSection: React.FC<CourseContentSectionProps> = ({ course_id }
         </span>
       );
     }
-    return null; // no icon for free or purchased
-  }
+    return null;
+  };
 
   return (
     <div className={styles.courseContentWrapper}>

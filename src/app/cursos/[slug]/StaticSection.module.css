@@ -1,55 +1,67 @@
+/* StaticSection.module.css */
+
+/* Container & title */
 .staticContainer {
-  background-color: rgba(255, 255, 255, 0.8); /* Transparent white background */
-  border: 1px solid #ccc;                    /* Light border */
+  background-color: rgba(255, 255, 255, 0.8);
+  border: 1px solid #ccc;
   border-radius: 6px;
   padding: 1rem;
-  overflow: hidden;
 }
-
-/* Initially collapsed: limit height (e.g., 150px) */
-.collapsed {
-  max-height: 150px;
-  overflow: hidden;
-}
-
-/* Expanded state: no height limit */
-.expanded {
-  max-height: none;
-}
-
-.content {
-  transition: max-height 0.3s ease;
-}
-
-/* Local class for section header instead of a bare h2 */
 .title {
   font-size: 1.8rem;
   margin-bottom: 0.8rem;
   color: #1c1d1f;
 }
 
-/* Feature list styling */
+/* Feature list base */
 .featureList {
   list-style: none;
   padding: 0;
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
+/* Two columns on tablet+ */
+@media (min-width: 768px) {
+  .featureList {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem 2rem;
+  }
+}
+
+/* Collapsed state hides extras */
+/* mobile: only first 2 items */
+@media (max-width: 767px) {
+  .content.collapsed .featureList li:nth-child(n+3) {
+    display: none;
+  }
+}
+/* desktop: first 4 items (2 rows) */
+@media (min-width: 768px) {
+  .content.collapsed .featureList li:nth-child(n+5) {
+    display: none;
+  }
+}
+
+/* NOTE: No "expanded" display override—li remain flex items always */
+
+/* Feature item: icon aligned to top and text indented properly */
 .featureItem {
   font-size: 1rem;
   color: #333;
-  margin-bottom: 0.5rem;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  gap: 0.5rem;
 }
 
 .checkIcon {
   color: #a435f0;
-  margin-right: 0.5rem;
-  font-weight: bold;
 }
 
-/* Toggle button styling */
+/* Toggle button & icon */
 .toggleButton {
   background: none;
   border: none;
