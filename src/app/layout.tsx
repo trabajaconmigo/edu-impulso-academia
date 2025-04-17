@@ -18,8 +18,8 @@ const openSans = Open_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Edu Impulso Academia",
-  description: "Plataforma de cursos en línea de alta calidad.",
+  title: "Escuela 360",
+  description: "Plataforma de cursos en línea.",
 };
 
 export default function RootLayout({
