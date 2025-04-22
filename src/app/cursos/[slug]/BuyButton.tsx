@@ -1,26 +1,27 @@
-// app/components/BuyButton.tsx
+// src/app/components/BuyButton.tsx
 "use client";
 
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
 import styles from "./BuyButton.module.css";
+
 interface BuyButtonProps {
-  course: {
-    id: string;
-    // Ensure you have a price property or calculate the amount some other way
-    price: number; // price in dollars (or adjust accordingly)
-  };
+  course: { id: string };
 }
 
 export default function BuyButton({ course }: BuyButtonProps) {
   const router = useRouter();
 
-  const handleBuy = () => {
-    // Convert price to cents if needed by your Stripe integration
-    const amount = course.price * 100;
-    // Redirect to the checkout page and pass courseId and amount as query parameters
-    router.push(`/checkout?courseId=${course.id}&amount=${amount}`);
+  const handleBuy = async () => {
+    const { data: sess } = await supabase.auth.getSession();
+    if (!sess.session) return router.push("/auth/login");
+    // Navegar a tu propia página de checkout
+    router.push(`/checkout?courseId=${course.id}`);
   };
 
-  return <button className={styles.buyButton} onClick={handleBuy}>Comprar Curso</button>;
- 
+  return (
+    <button className={styles.buyButton} onClick={handleBuy}>
+      Comprar Curso
+    </button>
+  );
 }

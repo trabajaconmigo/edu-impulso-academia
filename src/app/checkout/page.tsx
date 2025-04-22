@@ -8,76 +8,76 @@ import { supabase } from "@/lib/supabaseClient";
 
 import CheckoutForm from "./CheckoutForm";
 import OxxoPaymentForm from "./OxxoPaymentForm";
-import UserLoginRegistrationForm from "./UserLoginRegistrationForm"; // Your inline form
+import UserLoginRegistrationForm from "./UserLoginRegistrationForm";
 import styles from "./page.module.css";
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+const stripePromise = loadStripe(
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
+);
 
 function CheckoutPageContent() {
   const searchParams = useSearchParams();
-
-  // e.g. /checkout?courseId=abc&amount=20000
   const courseId = searchParams.get("courseId");
-  const rawAmount = searchParams.get("amount");
-  const amountCents = rawAmount ? Number(rawAmount) : 0;
-  const displayAmount = amountCents / 100;
 
   const [courseTitle, setCourseTitle] = useState<string>("");
+  const [amountCents, setAmountCents] = useState<number>(0);
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
-  const [loadingCourse, setLoadingCourse] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function checkSessionAndCourse() {
-      // 1) Check session
+    if (!courseId) return;
+    async function fetchCourse() {
+      // 1) Sesión de usuario
       const { data: sessionData } = await supabase.auth.getSession();
       setLoggedIn(!!sessionData.session);
 
-      // 2) Fetch course title from "courses"
-      if (courseId) {
-        const { data: cData, error } = await supabase
-          .from("courses")
-          .select("title")
-          .eq("id", courseId)
-          .single();
-
-        if (!error && cData) {
-          setCourseTitle(cData.title);
-        }
+      // 2) Obtener título y precio con descuento
+      const { data: course, error } = await supabase
+        .from("courses")
+        .select("title, price, discount_percentage, discount_active")
+        .eq("id", courseId)
+        .single();
+      if (!error && course) {
+        setCourseTitle(course.title);
+        const hasDiscount =
+          course.discount_active && course.discount_percentage > 0;
+        const finalPrice = hasDiscount
+          ? course.price * (1 - course.discount_percentage / 100)
+          : course.price;
+        setAmountCents(Math.round(finalPrice * 100));
       }
-      setLoadingCourse(false);
+
+      setLoading(false);
     }
-    checkSessionAndCourse();
+    fetchCourse();
   }, [courseId]);
 
-  if (!courseId || !amountCents) {
-    return <div className={styles.container}>Faltan datos del curso o precio.</div>;
+  if (!courseId) {
+    return <div className={styles.container}>ID de curso faltante.</div>;
+  }
+  if (loading || loggedIn === null) {
+    return <div className={styles.container}>Cargando datos…</div>;
   }
 
-  if (loadingCourse || loggedIn === null) {
-    return <div className={styles.container}>Cargando datos de curso y sesión...</div>;
-  }
+  const displayAmount = amountCents / 100;
 
-  // If not logged in => show inline sign in / register form
-  if (loggedIn === false) {
+  if (!loggedIn) {
     return (
       <div className={styles.container}>
         <UserLoginRegistrationForm
-          // Once user logs in, we set loggedIn to true => re-render => show payment forms
           onLoginSuccess={() => setLoggedIn(true)}
           courseId={courseId}
-          // we can pass the displayAmount or the actual cents
-          amount={displayAmount} // just to display in the form
+          amount={displayAmount}
         />
       </div>
     );
   }
 
-  // Logged in => show payment
   return (
     <div className={styles.checkoutBox}>
       <h1 className={styles.checkoutTitle}>Finalizar Compra</h1>
       <p className={styles.checkoutSubtitle}>
-        Estás comprando: <strong>{courseTitle || "Curso sin nombre"}</strong>
+        Estás comprando: <strong>{courseTitle}</strong>
       </p>
       <p className={styles.checkoutPrice}>
         Total a pagar: <strong>MX${displayAmount.toFixed(2)}</strong>
@@ -85,8 +85,8 @@ function CheckoutPageContent() {
 
       <Elements stripe={stripePromise}>
         <div className={styles.paymentMethods}>
-          <CheckoutForm courseId={courseId} amountCents={amountCents} />
-          <OxxoPaymentForm courseId={courseId} amount={amountCents} />
+          <CheckoutForm courseId={courseId} />
+          <OxxoPaymentForm courseId={courseId} />
         </div>
       </Elements>
     </div>

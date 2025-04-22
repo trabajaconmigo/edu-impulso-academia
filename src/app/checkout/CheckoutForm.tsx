@@ -1,45 +1,41 @@
+// src/app/checkout/CheckoutForm.tsx
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { supabase } from "@/lib/supabaseClient";
 import styles from "./CheckoutForm.module.css";
 
 interface CheckoutFormProps {
   courseId: string;
-  amountCents: number; // e.g. 20000 => 200.00 MXN
 }
 
-export default function CheckoutForm({ courseId, amountCents }: CheckoutFormProps) {
+export default function CheckoutForm({ courseId }: CheckoutFormProps) {
   const stripe = useStripe();
   const elements = useElements();
-  const [errorMsg, setErrorMsg] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
 
-  async function handleSubmit(e: React.FormEvent) {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!stripe || !elements) return;
     setLoading(true);
     setErrorMsg("");
 
-    // Create PaymentIntent on server
+    // 1) Crear PaymentIntent con sólo courseId
     const res = await fetch("/api/create-payment-intent", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        courseId,
-        // We pass the raw cents, e.g. 20000
-        amountCents,
-      }),
+      body: JSON.stringify({ courseId }),
     });
     const { clientSecret, error } = await res.json();
-    if (error) {
-      setErrorMsg("Error creando PaymentIntent: " + error);
+    if (error || !clientSecret) {
+      setErrorMsg(error || "No se recibió clientSecret");
       setLoading(false);
       return;
     }
 
-    // confirm card payment
+    // 2) Confirmar pago con tarjeta
     const result = await stripe.confirmCardPayment(clientSecret, {
       payment_method: {
         card: elements.getElement(CardElement)!,
@@ -49,15 +45,20 @@ export default function CheckoutForm({ courseId, amountCents }: CheckoutFormProp
     if (result.error) {
       setErrorMsg(result.error.message || "Error en el pago con tarjeta");
       setLoading(false);
-    } else if (result.paymentIntent && result.paymentIntent.status === "succeeded") {
-      // Check user session
-      const { data: { session } } = await supabase.auth.getSession();
+      return;
+    }
+
+    if (result.paymentIntent?.status === "succeeded") {
+      // 3) Guardar la compra en tu BD
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) {
-        setErrorMsg("La sesión expiró, por favor inicia sesión de nuevo.");
+        setErrorMsg("Sesión expirada, vuelve a iniciar sesión.");
         setLoading(false);
         return;
       }
-      // Insert purchase into DB (in pesos, e.g. 200.00)
+
       await fetch("/api/save-purchase", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -65,22 +66,21 @@ export default function CheckoutForm({ courseId, amountCents }: CheckoutFormProp
           userId: session.user.id,
           courseId,
           paymentId: result.paymentIntent.id,
-          // We store real pesos, so divide by 100 => 200.00
-          amount: amountCents / 100,
+          amount: result.paymentIntent.amount / 100,
         }),
       });
 
-      // redirect to perfil
+      // 4) Redirigir al perfil
       window.location.href = "/perfil";
     }
-  }
+  };
 
   return (
     <div className={styles.cardPaymentBox}>
       <h3 className={styles.paymentTitle}>Pago con Tarjeta</h3>
       <form onSubmit={handleSubmit} className={styles.paymentForm}>
         <div className={styles.cardElementWrapper}>
-          <CardElement />
+          <CardElement options={{ hidePostalCode: true }} />
         </div>
         {errorMsg && <div className={styles.errorMsg}>{errorMsg}</div>}
         <button

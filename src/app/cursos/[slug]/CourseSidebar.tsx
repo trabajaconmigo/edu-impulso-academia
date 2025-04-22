@@ -1,3 +1,4 @@
+// src/app/components/CourseSidebar.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -10,10 +11,11 @@ import { supabase } from "@/lib/supabaseClient";
 interface Course {
   id: string;
   title: string;
-  price: number;
+  price: number;                // Precio original
   thumbnail_url: string;
-  discount?: number;
-  course_includes?: string; // HTML containing custom icons and text
+  discount_percentage: number;  // Nuevo
+  discount_active: boolean;     // Nuevo
+  course_includes?: string;
   preview_video?: string;
 }
 
@@ -25,16 +27,7 @@ export default function CourseSidebar({ course }: CourseSidebarProps) {
   const [showPopup, setShowPopup] = useState(false);
   const [hasPurchased, setHasPurchased] = useState(false);
 
-  // Function to open preview video popup
-  const openVideo = () => {
-    if (course.preview_video) {
-      setShowPopup(true);
-    } else {
-      console.error("No preview video available");
-    }
-  };
-
-  // Check if the current user has already purchased this course
+  // Comprobar si el usuario ya compró
   useEffect(() => {
     async function checkPurchase() {
       const { data: sessionData } = await supabase.auth.getSession();
@@ -46,11 +39,7 @@ export default function CourseSidebar({ course }: CourseSidebarProps) {
           .eq("course_id", course.id)
           .eq("user_id", userId)
           .single();
-        if (!error && data) {
-          setHasPurchased(true);
-        } else {
-          setHasPurchased(false);
-        }
+        setHasPurchased(!error && !!data);
       } else {
         setHasPurchased(false);
       }
@@ -58,14 +47,26 @@ export default function CourseSidebar({ course }: CourseSidebarProps) {
     checkPurchase();
   }, [course.id]);
 
-  // Calculate original price if discount exists.
-  const originalPrice = course.discount
-    ? (course.price / (1 - course.discount)).toFixed(2)
-    : null;
+  // ¿Hay descuento activo?
+  const hasValidDiscount =
+    course.discount_active && course.discount_percentage > 0;
+
+  // Calcular precio final
+  const finalPrice = hasValidDiscount
+    ? Number((course.price * (1 - course.discount_percentage / 100)).toFixed(2))
+    : course.price;
+
+  const openVideo = () => {
+    if (course.preview_video) {
+      setShowPopup(true);
+    } else {
+      console.error("No preview video available");
+    }
+  };
 
   return (
     <div className={styles.sidebar}>
-      {/* Course Thumbnail + Preview Button */}
+      {/* Imagen + preview */}
       <div className={styles.courseImage}>
         <Image
           src={course.thumbnail_url}
@@ -82,22 +83,25 @@ export default function CourseSidebar({ course }: CourseSidebarProps) {
         </div>
       </div>
 
-      {/* Price & Discount Section (only if user has NOT purchased the course) */}
+      {/* Precio */}
       {!hasPurchased && (
         <div className={styles.priceSection}>
-          <div className={styles.currentPrice}>
-            MX${course.price.toFixed(2)}
-          </div>
-          {originalPrice && (
+          {hasValidDiscount ? (
             <>
               <div className={styles.originalPrice}>
-                Precio Original: MX${parseFloat(originalPrice).toFixed(2)}
+                MX${course.price.toFixed(2)}
+              </div>
+              <div className={styles.currentPrice}>
+                MX${finalPrice.toFixed(2)}
               </div>
               <div className={styles.discount}>
-                {Math.round((course.discount || 0) * 100)}% de descuento
+                {course.discount_percentage}% de descuento
               </div>
-              <div className={styles.timer}>¡Oferta termina en 4 horas!</div>
             </>
+          ) : (
+            <div className={styles.currentPrice}>
+              MX${course.price.toFixed(2)}
+            </div>
           )}
           <div className={styles.guarantee}>
             Garantía de devolución de 30 días
@@ -105,14 +109,14 @@ export default function CourseSidebar({ course }: CourseSidebarProps) {
         </div>
       )}
 
-      {/* Buy Button: Only display if user has NOT purchased the course */}
+      {/* Botón de compra */}
       {!hasPurchased && (
         <div className={styles.buyButton}>
           <BuyButton course={course} />
         </div>
       )}
 
-      {/* "Este curso incluye:" Section */}
+      {/* Incluye */}
       {course.course_includes && (
         <div className={styles.courseIncludes}>
           <h4>Este curso incluye:</h4>
@@ -122,7 +126,7 @@ export default function CourseSidebar({ course }: CourseSidebarProps) {
         </div>
       )}
 
-      {/* Video Popup */}
+      {/* Popup de video */}
       {showPopup && course.preview_video && (
         <VideoViewPopup
           videoUrl={course.preview_video}
