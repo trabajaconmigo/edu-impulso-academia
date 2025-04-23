@@ -7,6 +7,8 @@ import InstructorSection from "./InstructorSection";
 import AdditionalDetailsSection from "./AdditionalDetailsSection";
 import CourseSidebar from "./CourseSidebar";
 import styles from "./page.module.css";
+import OfferBar from "./OfferBar";   //  add this at top with other imports
+
 
 export default async function CoursePage({ params }: any) {
   const { slug } = params;
@@ -48,7 +50,20 @@ export default async function CoursePage({ params }: any) {
         <div className={styles.sidebarColumn}>
           <CourseSidebar course={course} />
         </div>
+         {/* urgency bar / floating basket */}
+      {/* pass only what OfferBar needs to keep payload light */}
+      <OfferBar
+        course={{
+          id: course.id,
+          price: course.price,
+          discount_percentage: course.discount_percentage,
+          discount_active: course.discount_active,
+        }}
+      />
+   
       </div>
+      
     </>
+    
   );
 }

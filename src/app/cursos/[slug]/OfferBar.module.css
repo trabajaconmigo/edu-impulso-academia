@@ -1,0 +1,92 @@
+/* ===== colour palette ===== */
+:root {
+    --purple: #6f42c1;   /* brand purple */
+    --purple-dark: #5833a0;
+    --green:  #29c26b;
+    --white:  #ffffff;
+  }
+  
+  /* ─── Desktop bottom bar ───────────────────────────── */
+  .desktopBar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;                       /* nav-bar height */
+    background: var(--purple);
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    z-index: 900;
+    box-shadow: 0 -2px 6px rgba(0,0,0,.15);
+  }
+  
+  .clockText strong {
+    font-weight: 700;
+  }
+  
+  /* ─── Mobile discount bar ──────────────────────────── */
+  .mobileBar {
+    position: fixed;
+    inset: auto 0 0 0;                  /* bottom full-width */
+    height: 56px;
+    background: var(--purple);
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    font-size: 0.95rem;
+    z-index: 905;
+  }
+  
+  .mobileIcon {
+    font-size: 1.2rem;
+  }
+  
+  .mobileClock {
+    font-weight: 600;
+  }
+  
+  /* ─── Mobile FAB (no discount) ─────────────────────── */
+  .fab {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    border: none;
+    background: var(--green);
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,.25);
+    cursor: pointer;
+    z-index: 905;
+    transition: transform 0.15s, background 0.15s;
+  }
+  
+  .fab:hover {
+    transform: scale(1.07);
+    background: #21a85a;
+  }
+  
+  /* ─── media queries ────────────────────────────────── */
+  @media (min-width: 768px) {
+    .mobileBar,
+    .fab {
+      display: none;
+    }
+  }
+  
+  @media (max-width: 767px) {
+    .desktopBar {
+      display: none;
+    }
+  }
+  
