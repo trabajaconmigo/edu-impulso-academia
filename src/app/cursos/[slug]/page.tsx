@@ -1,10 +1,10 @@
 /* ------------------------------------------------------------------
-   Course details page         ( SERVER COMPONENT )
+   Course details page  –  SERVER COMPONENT
    ------------------------------------------------------------------ */
-   import { notFound }       from "next/navigation";
-   import { supabase }       from "@/lib/supabaseClient";
+   import { notFound }   from "next/navigation";
+   import { supabase }   from "@/lib/supabaseClient";
    
-   /* ─ server-side children ─ */
+   /* server-only children */
    import Hero                     from "./Hero";
    import StaticSection            from "./StaticSection";
    import CourseContentSection     from "./CourseContentSection";
@@ -12,40 +12,37 @@
    import AdditionalDetailsSection from "./AdditionalDetailsSection";
    import CourseSidebar            from "./CourseSidebar";
    
-   /* ─ client component ─ */
+   /* client-only urgency bar / basket */
    import OfferBar                 from "./OfferBar";
    
    /* css */
-   import styles                   from "./page.module.css";
+   import styles from "./page.module.css";
    
-   /* ---------- typing --------------------------------------------------- */
+   /* ---------- row model from Supabase --------------------------------- */
    type CourseRow = {
-     id:               string;
-     slug:             string;
-     title:            string;
-     description:      string;
-     thumbnail_url:    string;
-     price:            number;
+     id: string;
+     slug: string;
+     title: string;
+     description: string;
+     thumbnail_url: string;
+     price: number;
      discount_percentage: number | null;
-     discount_active:  boolean | null;
-     expires_at:       string | null;
-     course_includes:  string | null;
-     what_you_ll_learn:string | null;
-     requirements:     string | null;
+     discount_active: boolean | null;
+     expires_at: string | null;
+     course_includes: string | null;
+     what_you_ll_learn: string | null;
+     requirements: string | null;
      description_long: string | null;
-     instructor_id:    string | null;
-     preview_video:    string | null;
+     instructor_id: string | null;
+     preview_video: string | null;
    };
    
-   interface PageProps {
-     params: { slug: string };
-   }
-   
    /* ==================================================================== */
-   export default async function CoursePage({ params }: PageProps) {
+   export default async function CoursePage(
+     { params }: { params: { slug: string } }   /* ← inline typing, no alias */
+   ) {
      const { slug } = params;
    
-     /* fetch only what we actually use */
      const { data, error } = await supabase
        .from("courses")
        .select(`
@@ -62,21 +59,21 @@
        return notFound();
      }
    
-     const course = data; /* ────────────── fully-typed row ───────────── */
+     const course = data;
    
-     /* cast/normalise for CourseSidebar to satisfy its stricter interface */
+     /* normalise for sidebar -- ensures required fields are present */
      const sidebarCourse = {
-       id:                course.id,
-       title:             course.title,
-       price:             course.price,
-       thumbnail_url:     course.thumbnail_url,
+       id: course.id,
+       title: course.title,
+       price: course.price,
+       thumbnail_url: course.thumbnail_url,
        discount_percentage: course.discount_percentage ?? 0,
-       discount_active:     !!course.discount_active,
-       course_includes:   course.course_includes ?? undefined,
-       preview_video:     course.preview_video ?? undefined,
+       discount_active: !!course.discount_active,
+       course_includes: course.course_includes ?? undefined,
+       preview_video: course.preview_video ?? undefined,
      };
    
-     /* ------------------------------------------------------------------ */
+     /* --------------------------- render ------------------------------- */
      return (
        <>
          {/* HERO */}
@@ -84,11 +81,9 @@
    
          {/* 2-column layout */}
          <div className={styles.mainContainer}>
-           {/* LEFT */}
+           {/* LEFT column */}
            <div className={styles.leftColumn}>
-             <StaticSection            /* ⬅️  row 89 fix */
-               whatYoullLearn={course.what_you_ll_learn ?? ""} 
-             />
+             <StaticSection whatYoullLearn={course.what_you_ll_learn ?? ""} />
    
              <CourseContentSection course_id={course.id} />
    
@@ -102,9 +97,9 @@
              />
            </div>
    
-           {/* RIGHT – sticky sidebar */}
+           {/* RIGHT column – sticky sidebar */}
            <div className={styles.sidebarColumn}>
-             <CourseSidebar course={sidebarCourse} />  {/* ⬅️ row 104 fix */}
+             <CourseSidebar course={sidebarCourse} />
            </div>
          </div>
    
