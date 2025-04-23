@@ -13,12 +13,14 @@ import OfferBar from "./OfferBar";   //  add this at top with other imports
 export default async function CoursePage({ params }: any) {
   const { slug } = params;
 
+  
+
   // Fetch the course (including new columns like requirements, description_long, instructor_id)
   const { data, error } = await supabase
-    .from("courses")
-    .select("*")
-    .eq("slug", slug)
-    .single();
+  .from("courses")
+  .select("*, expires_at")
+  .eq("slug", slug)
+  .single();
 
   if (error || !data) {
     console.error("Error fetching course:", error);
@@ -53,13 +55,14 @@ export default async function CoursePage({ params }: any) {
          {/* urgency bar / floating basket */}
       {/* pass only what OfferBar needs to keep payload light */}
       <OfferBar
-        course={{
-          id: course.id,
-          price: course.price,
-          discount_percentage: course.discount_percentage,
-          discount_active: course.discount_active,
-        }}
-      />
+  course={{
+    id: data.id,
+    price: data.price,
+    discount_percentage: data.discount_percentage,
+    discount_active: data.discount_active,
+    expires_at: data.expires_at,   // ← new
+  }}
+/>
    
       </div>
       

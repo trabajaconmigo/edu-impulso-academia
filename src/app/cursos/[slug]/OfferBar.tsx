@@ -1,3 +1,6 @@
+/* ----------  <OfferBar>  ----------------------------------
+   Fixed bottom urgency bar / FAB for the course page
+----------------------------------------------------------- */
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -11,25 +14,24 @@ interface CourseLite {
   price: number;
   discount_percentage?: number | null;
   discount_active?: boolean | null;
+  expires_at?: string | null;      // ISO timestamp
 }
 
-interface OfferBarProps {
+interface Props {
   course: CourseLite;
 }
 
-const HOURS_LEFT = 4; // visual urgency → 4 h
-
-export default function OfferBar({ course }: OfferBarProps) {
+export default function OfferBar({ course }: Props) {
   const router = useRouter();
 
-  /* ─── 1. Already purchased? ─────────────────────────────── */
-  const [hasPurchased, setHasPurchased] = useState<boolean | null>(null);
+  /* ── 1. already purchased? ───────────────────────────── */
+  const [owned, setOwned] = useState<boolean | null>(null);
 
   useEffect(() => {
     let mounted = true;
-    async function check() {
+    async function run() {
       const { data: session } = await supabase.auth.getSession();
-      if (!session.session) return mounted && setHasPurchased(false);
+      if (!session.session) return mounted && setOwned(false);
 
       const { data, error } = await supabase
         .from("purchases")
@@ -38,67 +40,70 @@ export default function OfferBar({ course }: OfferBarProps) {
         .eq("course_id", course.id)
         .single();
 
-      if (mounted) setHasPurchased(!error && !!data);
+      if (mounted) setOwned(!error && !!data);
     }
-    check();
+    run();
     return () => {
       mounted = false;
     };
   }, [course.id]);
 
-  /* ─── 2. Timer (hh:mm:ss) ───────────────────────────────── */
-  const [secsLeft, setSecsLeft] = useState(HOURS_LEFT * 3600);
+  /* ── 2. timer → seconds left until expires_at ────────── */
+  const [secsLeft, setSecsLeft] = useState<number>(() => {
+    if (!course.expires_at) return 0;
+    const diff = new Date(course.expires_at).getTime() - Date.now();
+    return diff > 0 ? Math.floor(diff / 1000) : 0;
+  });
+
   useEffect(() => {
-    const id = setInterval(() => setSecsLeft((s) => (s > 0 ? s - 1 : 0)), 1000);
+    if (!course.expires_at) return;
+    const id = setInterval(() => {
+      const diff = new Date(course.expires_at!).getTime() - Date.now();
+      setSecsLeft(diff > 0 ? Math.floor(diff / 1000) : 0);
+    }, 1000);
     return () => clearInterval(id);
-  }, []);
+  }, [course.expires_at]);
+
   const tH = String(Math.floor(secsLeft / 3600)).padStart(2, "0");
   const tM = String(Math.floor((secsLeft % 3600) / 60)).padStart(2, "0");
   const tS = String(secsLeft % 60).padStart(2, "0");
   const timeString = `${tH}:${tM}:${tS}`;
 
-  /* ─── 3. Pricing (for checkout) ─────────────────────────── */
-  const discountOk = course.discount_active && (course.discount_percentage ?? 0) > 0;
-  const discounted =
-    discountOk
-      ? +(course.price * (1 - (course.discount_percentage ?? 0))).toFixed(2)
-      : course.price;
-  const amountCents = Math.round(discounted * 100);
+  /* ── 3. current payable amount (with discount if active) */
+  const discountOk =
+    course.discount_active && (course.discount_percentage ?? 0) > 0;
+  const finalPrice = discountOk
+    ? +(course.price * (1 - (course.discount_percentage ?? 0))).toFixed(2)
+    : course.price;
+  const amountCents = Math.round(finalPrice * 100);
 
-  /* ─── 4. CTA navigation ─────────────────────────────────── */
-  function goCheckout() {
+  /* ── 4. click handler → checkout ─────────────────────── */
+  const goCheckout = () =>
     router.push(`/checkout?courseId=${course.id}&amount=${amountCents}`);
-  }
 
-  /* ─── 5. Visibility rules ───────────────────────────────── */
-  if (hasPurchased) return null;
+  /* ── 5. visibility rules ─────────────────────────────── */
+  if (owned) return null; // hide if user owns course
 
-  const showDesktopBar = discountOk;      // only if discount
-  const showMobileBar  = discountOk;      // full-width bar with basket
-  const showMobileFab  = !discountOk;     // circle FAB when no discount
+  const showDesktopBar = discountOk && secsLeft > 0;
+  const showMobileBar = discountOk && secsLeft > 0;
+  const showMobileFab = !discountOk || secsLeft <= 0;
 
-  /* ─── 6. Render ─────────────────────────────────────────── */
+  /* ── 6. render ───────────────────────────────────────── */
   return (
     <>
-      {/* ===== Desktop fixed bar (only when discount) ===== */}
       {showDesktopBar && (
         <div className={styles.desktopBar}>
-          <span className={styles.clockText}>
-            ¡Oferta por tiempo limitado!  Termina en&nbsp;
-            <strong>{timeString}</strong>
-          </span>
+          ¡Oferta termina en&nbsp;<strong>{timeString}</strong>
         </div>
       )}
 
-      {/* ===== Mobile full-width bar (discount) ===== */}
       {showMobileBar && (
         <div className={styles.mobileBar} onClick={goCheckout}>
-          <FaShoppingCart className={styles.mobileIcon} />
-          <span className={styles.mobileClock}>Termina en&nbsp;{timeString}</span>
+          <FaShoppingCart className={styles.cartIcon} />
+          <span>Termina en&nbsp;{timeString}</span>
         </div>
       )}
 
-      {/* ===== Mobile floating basket (no discount) ===== */}
       {showMobileFab && (
         <button className={styles.fab} onClick={goCheckout}>
           <FaShoppingCart />

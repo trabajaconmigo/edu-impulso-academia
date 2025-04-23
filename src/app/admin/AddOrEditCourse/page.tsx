@@ -1,6 +1,6 @@
 /* --------------------------------------------------------------------
    src/app/admin/AddOrEditCoursePage.tsx
-   -------------------------------------------------------------------- */
+   ------------------------------------------------------------------ */
    "use client";
 
    import React, { useEffect, useState } from "react";
@@ -13,12 +13,30 @@
    /* ---------- Constants ------------------------------------------------- */
    
    const PREDEFINED_FEATURE_ICONS = [
-     { label: "Ícono de Video", url: "https://rvinrzxeetertylulqkx.supabase.co/storage/v1/object/public/courseimg/video_icon.png" },
-     { label: "Ícono de Descargas", url: "https://rvinrzxeetertylulqkx.supabase.co/storage/v1/object/public/courseimg/download.png" },
-     { label: "Ícono de Tareas", url: "https://rvinrzxeetertylulqkx.supabase.co/storage/v1/object/public/courseimg/certificate-icon.png" },
-     { label: "Ícono de Dispositivos", url: "https://rvinrzxeetertylulqkx.supabase.co/storage/v1/object/public/courseimg/devices-icon.png" },
-     { label: "Ícono de Foros", url: "https://rvinrzxeetertylulqkx.supabase.co/storage/v1/object/public/courseimg/foros.png" },
-     { label: "Ícono de Certificado", url: "https://rvinrzxeetertylulqkx.supabase.co/storage/v1/object/public/courseimg/certificate.png" },
+     {
+       label: "Ícono de Video",
+       url: "https://rvinrzxeetertylulqkx.supabase.co/storage/v1/object/public/courseimg/video_icon.png",
+     },
+     {
+       label: "Ícono de Descargas",
+       url: "https://rvinrzxeetertylulqkx.supabase.co/storage/v1/object/public/courseimg/download.png",
+     },
+     {
+       label: "Ícono de Tareas",
+       url: "https://rvinrzxeetertylulqkx.supabase.co/storage/v1/object/public/courseimg/certificate-icon.png",
+     },
+     {
+       label: "Ícono de Dispositivos",
+       url: "https://rvinrzxeetertylulqkx.supabase.co/storage/v1/object/public/courseimg/devices-icon.png",
+     },
+     {
+       label: "Ícono de Foros",
+       url: "https://rvinrzxeetertylulqkx.supabase.co/storage/v1/object/public/courseimg/foros.png",
+     },
+     {
+       label: "Ícono de Certificado",
+       url: "https://rvinrzxeetertylulqkx.supabase.co/storage/v1/object/public/courseimg/certificate.png",
+     },
    ];
    
    /* ---------- Types ----------------------------------------------------- */
@@ -46,6 +64,7 @@
    }
    
    interface CourseData {
+     /* core */
      id?: string;
      slug: string;
      title: string;
@@ -60,8 +79,9 @@
      /* discount */
      discount_percentage: number;
      discount_active: boolean;
+     expires_at?: string | null; // ← NEW  🔥
    
-     /* HTML‑stored fields */
+     /* HTML fields */
      course_includes?: string;
      what_you_ll_learn?: string;
      requirements?: string | null;
@@ -97,6 +117,7 @@
    
        discount_percentage: 0,
        discount_active: false,
+       expires_at: null,
      });
    
      const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -139,7 +160,13 @@
        try {
          const { data } = await supabase.from("courses").select("*").eq("id", id).single();
          if (!data) return;
-         setCourse(data as CourseData);
+         setCourse({
+           ...(data as CourseData),
+           /* convert timestamp → input-friendly   */
+           expires_at: data.expires_at
+             ? new Date(data.expires_at).toISOString().slice(0, 16)
+             : null,
+         });
    
          if (data.what_you_ll_learn)
            setLearningPoints(
@@ -167,8 +194,10 @@
      ) {
        const { name, type } = e.target;
        let value: any = (e.target as any).value;
+   
        if (type === "checkbox") value = (e.target as HTMLInputElement).checked;
        else if (type === "number") value = parseFloat(value) || 0;
+   
        setCourse((prev) => ({ ...prev, [name]: value }));
      }
    
@@ -176,12 +205,15 @@
    
      function parseFeaturesHTML(html: string): FeatureItem[] {
        const out: FeatureItem[] = [];
-       html.split("<li>").slice(1).forEach((chunk) => {
-         const inner = chunk.split("</li>")[0];
-         const url = (inner.match(/<img[^>]+src="([^"]+)"/) || [])[1] || "";
-         const text = inner.replace(/<img[^>]+>/, "").trim();
-         out.push({ iconUrl: url, text });
-       });
+       html
+         .split("<li>")
+         .slice(1)
+         .forEach((chunk) => {
+           const inner = chunk.split("</li>")[0];
+           const url = (inner.match(/<img[^>]+src="([^"]+)"/) || [])[1] || "";
+           const text = inner.replace(/<img[^>]+>/, "").trim();
+           out.push({ iconUrl: url, text });
+         });
        return out;
      }
    
@@ -252,10 +284,13 @@
              .single();
            sectionId = newSec!.id;
          } else {
-           await supabase.from("course_contents").update({
-             title: sec.title,
-             order_index: sec.order_index,
-           }).eq("id", sectionId);
+           await supabase
+             .from("course_contents")
+             .update({
+               title: sec.title,
+               order_index: sec.order_index,
+             })
+             .eq("id", sectionId);
          }
          for (const les of sec.lessons) {
            const duration = les.minutes * 60 + les.seconds;
@@ -271,13 +306,16 @@
                paid: les.paid,
              });
            } else {
-             await supabase.from("course_contents").update({
-               title: les.title,
-               youtube_link: les.youtube_link,
-               order_index: les.order_index,
-               duration,
-               paid: les.paid,
-             }).eq("id", les.id);
+             await supabase
+               .from("course_contents")
+               .update({
+                 title: les.title,
+                 youtube_link: les.youtube_link,
+                 order_index: les.order_index,
+                 duration,
+                 paid: les.paid,
+               })
+               .eq("id", les.id);
            }
          }
        }
@@ -343,11 +381,8 @@
      /* --------- Features ------------------------------------------------ */
      const addFeature = () => setFeatures((f) => [...f, { iconUrl: "", text: "" }]);
      const removeFeature = (i: number) => setFeatures((f) => f.filter((_, idx) => idx !== i));
-     const handleFeatureChange = (
-       i: number,
-       name: "iconUrl" | "text",
-       value: string
-     ) => setFeatures((f) => f.map((e, idx) => (idx === i ? { ...e, [name]: value } : e)));
+     const handleFeatureChange = (i: number, name: "iconUrl" | "text", value: string) =>
+       setFeatures((f) => f.map((e, idx) => (idx === i ? { ...e, [name]: value } : e)));
    
      /* --------- Sections & Lessons helpers ------------------------------ */
      const addSection = () =>
@@ -414,6 +449,8 @@
        try {
          const payload = {
            ...course,
+           /* convert back datetime-local → ISO  */
+           expires_at: course.expires_at ? new Date(course.expires_at).toISOString() : null,
            course_includes: buildFeaturesHTML(features),
            what_you_ll_learn: learningPoints.join("\n\n"),
            requirements: buildRequirementsHTML(requirementsPoints),
@@ -527,7 +564,12 @@
                    </select>
                    <button
                      type="button"
-                     style={{ border: "1px solid blue", background: "transparent", color: "blue", padding: "0.4rem 0.8rem" }}
+                     style={{
+                       border: "1px solid blue",
+                       background: "transparent",
+                       color: "blue",
+                       padding: "0.4rem 0.8rem",
+                     }}
                      onClick={() => {
                        if (course.instructor_id) {
                          const inst = instructors.find((i) => i.id === course.instructor_id);
@@ -625,7 +667,7 @@
                  </select>
                </div>
    
-               {/* ---- Discount ---- */}
+               {/* ---- Discount & Expiration ---- */}
                <div className={styles.fieldRow}>
                  <div className={styles.fieldCol}>
                    <label>% Descuento</label>
@@ -648,6 +690,20 @@
                      style={{ width: 22, height: 22, marginTop: 4 }}
                    />
                  </div>
+               </div>
+   
+               {/* expiration datetime */}
+               <div className={styles.fieldGroup}>
+                 <label>Vence (fecha y hora)</label>
+                 <input
+                   type="datetime-local"
+                   name="expires_at"
+                   value={course.expires_at || ""}
+                   onChange={handleCourseChange}
+                 />
+                 <small style={{ color: "#666" }}>
+                   Dejar vacío si no quieres un temporizador.
+                 </small>
                </div>
              </div>
    
@@ -782,9 +838,7 @@
                        <input
                          type="text"
                          value={sec.title}
-                         onChange={(e) =>
-                           handleSectionChange(secIdx, "title", e.target.value)
-                         }
+                         onChange={(e) => handleSectionChange(secIdx, "title", e.target.value)}
                        />
                      </div>
                      <div>
@@ -893,12 +947,7 @@
                                type="checkbox"
                                checked={les.paid}
                                onChange={(e) =>
-                                 handleLessonChange(
-                                   secIdx,
-                                   lesIdx,
-                                   "paid",
-                                   e.target.checked
-                                 )
+                                 handleLessonChange(secIdx, lesIdx, "paid", e.target.checked)
                                }
                              />{" "}
                              ¿Lección de pago?
