@@ -72,10 +72,11 @@
    
          {/* urgency bar / basket (client) */}
          <OfferBar
-           discountActive={course.discount_active}
-           expiresAt={course.expires_at}         // ISO string | null
-        
-         />
+  courseId={course.id}            // ✓ add this
+  discountActive={course.discount_active}
+  expiresAt={course.expires_at}
+/>
+
        </>
      );
    }

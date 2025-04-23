@@ -1,59 +1,76 @@
-/* ----------------------------------------------------
-   OfferBar styles
-   (Colours come straight from palette – no :root here)
-   ---------------------------------------------------- */
-   .container {
-    pointer-events: none;   /* children re-enable when needed */
-  }
-  
-  /* ---------- desktop fixed bar ---------------------- */
-  .barDesktop {
+/* ---------- full-width bar -------------------------------------- */
+.bar {
     position: fixed;
     bottom: 0;
     left: 0;
     width: 100%;
-    background: #6f42c1;      /* purple */
-    color: #ffffff;
-    display: flex;
-    justify-content: center;
-    gap: 0.75rem;
-    align-items: center;
-    padding: 0.55rem 1rem;
-    font-weight: 600;
-    z-index: 999;
-  }
-  
-  .msg  { font-size: 0.95rem; }
-  .time { font-variant-numeric: tabular-nums; }
-  
-  @media (max-width: 767px) {
-    .barDesktop { display: none; }
-  }
-  
-  /* ---------- mobile basket -------------------------- */
-  .basketCircle,
-  .basketWithBar {
-    position: fixed;
-    bottom: 1rem;
-    right: 1rem;
-    width: 56px;
     height: 56px;
-    border-radius: 50%;
-    border: none;
-    background: #28a745;   /* green */
+    background: var(--purple);
     color: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+    column-gap: 0.75rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    z-index: 1000;
     cursor: pointer;
-    pointer-events: auto;
-    z-index: 1_000;
+    transition: background 0.25s ease;
   }
-  .basketWithBar { bottom: 4.5rem; }    /* lifted above purple bar */
+  
+  .bar:hover {
+    background: var(--purple-dark);
+  }
+  
+  .clock {
+    font-family: ui-monospace, monospace;
+    background: rgba(0 0 0 / 0.25);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  
+  .cartIcon {
+    font-size: 20px;
+  }
+  
+  /* ---------- floating action button (mobile only) ---------------- */
+  .fab {
+    position: fixed;
+    bottom: 18px;
+    right: 18px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: none;
+    background: var(--purple);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 3px 8px rgba(0 0 0 / 0.25);
+    z-index: 1000;
+    cursor: pointer;
+    transition: background 0.25s;
+  }
+  
+  .fab:hover {
+    background: var(--purple-dark);
+  }
   
   @media (min-width: 768px) {
-    .basketCircle,
-    .basketWithBar { display: none; }
+    /* hide FAB on tablet/desktop */
+    .fab {
+      display: none;
+    }
+  }
+  /* mobile fine-tune text size & spacing */
+@media (max-width: 767px) {
+    .bar {
+      height: 50px;
+      padding-inline: 0.75rem;
+    }
+    .text {
+      font-size: 0.8rem;
+    }
   }
   
