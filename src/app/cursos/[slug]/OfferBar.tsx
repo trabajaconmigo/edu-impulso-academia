@@ -1,114 +1,81 @@
-/* ----------  <OfferBar>  ----------------------------------
-   Fixed bottom urgency bar / FAB for the course page
------------------------------------------------------------ */
-"use client";
+/* ------------------------------------------------------------------
+   Fixed urgency bar (desktop)  +  floating basket (mobile)
+   CLIENT COMPONENT
+   ------------------------------------------------------------------ */
+   "use client";
 
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabaseClient";
-import { FaShoppingCart } from "react-icons/fa";
-import styles from "./OfferBar.module.css";
-
-interface CourseLite {
-  id: string;
-  price: number;
-  discount_percentage?: number | null;
-  discount_active?: boolean | null;
-  expires_at?: string | null;      // ISO timestamp
-}
-
-interface Props {
-  course: CourseLite;
-}
-
-export default function OfferBar({ course }: Props) {
-  const router = useRouter();
-
-  /* ── 1. already purchased? ───────────────────────────── */
-  const [owned, setOwned] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    let mounted = true;
-    async function run() {
-      const { data: session } = await supabase.auth.getSession();
-      if (!session.session) return mounted && setOwned(false);
-
-      const { data, error } = await supabase
-        .from("purchases")
-        .select("id")
-        .eq("user_id", session.session.user.id)
-        .eq("course_id", course.id)
-        .single();
-
-      if (mounted) setOwned(!error && !!data);
-    }
-    run();
-    return () => {
-      mounted = false;
-    };
-  }, [course.id]);
-
-  /* ── 2. timer → seconds left until expires_at ────────── */
-  const [secsLeft, setSecsLeft] = useState<number>(() => {
-    if (!course.expires_at) return 0;
-    const diff = new Date(course.expires_at).getTime() - Date.now();
-    return diff > 0 ? Math.floor(diff / 1000) : 0;
-  });
-
-  useEffect(() => {
-    if (!course.expires_at) return;
-    const id = setInterval(() => {
-      const diff = new Date(course.expires_at!).getTime() - Date.now();
-      setSecsLeft(diff > 0 ? Math.floor(diff / 1000) : 0);
-    }, 1000);
-    return () => clearInterval(id);
-  }, [course.expires_at]);
-
-  const tH = String(Math.floor(secsLeft / 3600)).padStart(2, "0");
-  const tM = String(Math.floor((secsLeft % 3600) / 60)).padStart(2, "0");
-  const tS = String(secsLeft % 60).padStart(2, "0");
-  const timeString = `${tH}:${tM}:${tS}`;
-
-  /* ── 3. current payable amount (with discount if active) */
-  const discountOk =
-    course.discount_active && (course.discount_percentage ?? 0) > 0;
-  const finalPrice = discountOk
-    ? +(course.price * (1 - (course.discount_percentage ?? 0))).toFixed(2)
-    : course.price;
-  const amountCents = Math.round(finalPrice * 100);
-
-  /* ── 4. click handler → checkout ─────────────────────── */
-  const goCheckout = () =>
-    router.push(`/checkout?courseId=${course.id}&amount=${amountCents}`);
-
-  /* ── 5. visibility rules ─────────────────────────────── */
-  if (owned) return null; // hide if user owns course
-
-  const showDesktopBar = discountOk && secsLeft > 0;
-  const showMobileBar = discountOk && secsLeft > 0;
-  const showMobileFab = !discountOk || secsLeft <= 0;
-
-  /* ── 6. render ───────────────────────────────────────── */
-  return (
-    <>
-      {showDesktopBar && (
-        <div className={styles.desktopBar}>
-          ¡Oferta termina en&nbsp;<strong>{timeString}</strong>
-        </div>
-      )}
-
-      {showMobileBar && (
-        <div className={styles.mobileBar} onClick={goCheckout}>
-          <FaShoppingCart className={styles.cartIcon} />
-          <span>Termina en&nbsp;{timeString}</span>
-        </div>
-      )}
-
-      {showMobileFab && (
-        <button className={styles.fab} onClick={goCheckout}>
-          <FaShoppingCart />
-        </button>
-      )}
-    </>
-  );
-}
+   import { useEffect, useState } from "react";
+   import { useRouter }           from "next/navigation";
+   import { FiShoppingCart }      from "react-icons/fi";
+   import styles                  from "./OfferBar.module.css";
+   
+   interface Props {
+     discountActive: boolean;
+     /** ISO date-string – when the countdown should hit 0 */
+     expiresAt: string | null;
+   }
+   
+   /* helper ----------------------------------------------------------- */
+   function remainingMs(expiresAt: string | null) {
+     if (!expiresAt) return 0;
+     return Math.max(0, new Date(expiresAt).getTime() - Date.now());
+   }
+   const pad = (n: number) => n.toString().padStart(2, "0");
+   
+   /* component -------------------------------------------------------- */
+   export default function OfferBar({ discountActive, expiresAt }: Props) {
+     const router = useRouter();
+     const [msLeft, setMsLeft] = useState<number>(() => remainingMs(expiresAt));
+   
+     /* tick every second */
+     useEffect(() => {
+       if (!expiresAt) return;
+       const id = setInterval(() => setMsLeft(remainingMs(expiresAt)), 1_000);
+       return () => clearInterval(id);
+     }, [expiresAt]);
+   
+     /* time parts */
+     const d  = Math.floor(msLeft / 86_400_000);
+     const h  = Math.floor((msLeft / 3_600_000) % 24);
+     const m  = Math.floor((msLeft /   60_000) % 60);
+     const s  = Math.floor((msLeft /    1_000) % 60);
+   
+     /* rules ---------------------------------------------------------- */
+     const countdownRunning = discountActive && msLeft > 0;
+     const hideDesktopBar   = !countdownRunning;
+   
+     /* scroll / redirect to the existing buy button */
+     const handleBuyClick = () => {
+       /* customise if you have a specific anchor */
+       const el = document.querySelector("#buyButton");
+       if (el) (el as HTMLElement).scrollIntoView({ behavior: "smooth" });
+       else router.push("#comprar");
+     };
+   
+     /* --------------------------------------------------------------- */
+     return (
+       <div className={styles.container}>
+         {/* desktop bar (only when discount is active) */}
+         {!hideDesktopBar && (
+           <div className={styles.barDesktop}>
+             <span className={styles.msg}>Oferta termina en</span>
+             <span className={styles.time}>
+               {d > 0 && `${d}d `}{pad(h)}:{pad(m)}:{pad(s)}
+             </span>
+           </div>
+         )}
+   
+         {/* mobile floating basket – always visible */}
+         <button
+           className={
+             countdownRunning ? styles.basketWithBar : styles.basketCircle
+           }
+           onClick={handleBuyClick}
+           aria-label="Comprar curso"
+         >
+           <FiShoppingCart size={26} />
+         </button>
+       </div>
+     );
+   }
+   

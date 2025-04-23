@@ -11,6 +11,9 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans, Arial, Helvetica, sans-serif);
   --font-mono: var(--font-geist-mono);
+  --purple:        #6f42c1;  /* brand purple */
+      --purple-dark:   #5833a0;
+      --green:         #28a745;
 }
 
 /* Dark mode override (if needed) */

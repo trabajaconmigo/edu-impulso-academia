@@ -185,4 +185,25 @@
   }
 }
 
+/* ---------- “Este curso incluye” list – GLOBAL RULES --------------- */
+.courseIncludes :global(ul) {
+  list-style: none;
+  margin:   0;
+  padding:  0;
+}
+
+.courseIncludes :global(li) {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.92rem;
+  margin: .35rem 0;
+  color: #333;                 /* adjust if you use dark mode */
+}
+
+.courseIncludes :global(img) {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
 

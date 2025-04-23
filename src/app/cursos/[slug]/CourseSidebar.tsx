@@ -16,6 +16,7 @@ interface Course {
   discount_percentage: number;  // Nuevo
   discount_active: boolean;     // Nuevo
   course_includes?: string;
+  
   preview_video?: string;
 }
 
