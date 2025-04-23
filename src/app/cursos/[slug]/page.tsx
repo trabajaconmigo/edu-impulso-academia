@@ -1,10 +1,10 @@
 /* ------------------------------------------------------------------
    Course details page  –  SERVER COMPONENT
    ------------------------------------------------------------------ */
-   import { notFound }   from "next/navigation";
-   import { supabase }   from "@/lib/supabaseClient";
+   import { notFound }     from "next/navigation";
+   import { supabase }     from "@/lib/supabaseClient";
    
-   /* server-only children */
+   /* server-side children */
    import Hero                     from "./Hero";
    import StaticSection            from "./StaticSection";
    import CourseContentSection     from "./CourseContentSection";
@@ -18,31 +18,12 @@
    /* css */
    import styles from "./page.module.css";
    
-   /* ---------- row model from Supabase --------------------------------- */
-   type CourseRow = {
-     id: string;
-     slug: string;
-     title: string;
-     description: string;
-     thumbnail_url: string;
-     price: number;
-     discount_percentage: number | null;
-     discount_active: boolean | null;
-     expires_at: string | null;
-     course_includes: string | null;
-     what_you_ll_learn: string | null;
-     requirements: string | null;
-     description_long: string | null;
-     instructor_id: string | null;
-     preview_video: string | null;
-   };
-   
-   /* ==================================================================== */
-   export default async function CoursePage(
-     { params }: { params: { slug: string } }   /* ← inline typing, no alias */
-   ) {
+   /* ------------------------------------------------------------------ */
+   /* NOTE ­–  **NO explicit PageProps generic** → lets Next.js provide it */
+   export default async function CoursePage({ params }: { params: { slug: string } }) {
      const { slug } = params;
    
+     /* --- fetch course row (only needed columns) ----------------------- */
      const { data, error } = await supabase
        .from("courses")
        .select(`
@@ -52,48 +33,45 @@
          description_long, instructor_id, preview_video
        `)
        .eq("slug", slug)
-       .single<CourseRow>();
+       .single();
    
      if (error || !data) {
        console.error("Error fetching course:", error);
        return notFound();
      }
    
-     const course = data;
-   
-     /* normalise for sidebar -- ensures required fields are present */
+     /* -------- normalise object for Sidebar (smaller payload) ---------- */
      const sidebarCourse = {
-       id: course.id,
-       title: course.title,
-       price: course.price,
-       thumbnail_url: course.thumbnail_url,
-       discount_percentage: course.discount_percentage ?? 0,
-       discount_active: !!course.discount_active,
-       course_includes: course.course_includes ?? undefined,
-       preview_video: course.preview_video ?? undefined,
+       id:                data.id,
+       title:             data.title,
+       price:             data.price,
+       thumbnail_url:     data.thumbnail_url,
+       discount_percentage: data.discount_percentage ?? 0,
+       discount_active:     !!data.discount_active,
+       course_includes:     data.course_includes ?? undefined,
+       preview_video:       data.preview_video ?? undefined,
      };
    
-     /* --------------------------- render ------------------------------- */
+     /* ------------------------------ render --------------------------- */
      return (
        <>
          {/* HERO */}
-         <Hero title={course.title} description={course.description} />
+         <Hero title={data.title} description={data.description} />
    
-         {/* 2-column layout */}
+         {/* ----- 2-column layout --------------------------------------- */}
          <div className={styles.mainContainer}>
            {/* LEFT column */}
            <div className={styles.leftColumn}>
-             <StaticSection whatYoullLearn={course.what_you_ll_learn ?? ""} />
+             <StaticSection whatYoullLearn={data.what_you_ll_learn ?? ""} />
+             <CourseContentSection course_id={data.id} />
    
-             <CourseContentSection course_id={course.id} />
-   
-             {course.instructor_id && (
-               <InstructorSection instructorId={course.instructor_id} />
+             {data.instructor_id && (
+               <InstructorSection instructorId={data.instructor_id} />
              )}
    
              <AdditionalDetailsSection
-               requirements={course.requirements}
-               descriptionLong={course.description_long}
+               requirements={data.requirements}
+               descriptionLong={data.description_long}
              />
            </div>
    
@@ -103,10 +81,10 @@
            </div>
          </div>
    
-         {/* urgency bar / basket */}
+         {/* urgency bar / floating basket */}
          <OfferBar
-           discountActive={!!course.discount_active}
-           expiresAt={course.expires_at}
+           discountActive={!!data.discount_active}
+           expiresAt={data.expires_at}        /* ISO string or null */
          />
        </>
      );
