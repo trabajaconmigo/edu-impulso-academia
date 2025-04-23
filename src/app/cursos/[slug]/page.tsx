@@ -12,17 +12,18 @@
    import AdditionalDetailsSection from "./AdditionalDetailsSection";
    import CourseSidebar            from "./CourseSidebar";
    
-   /* client-only urgency bar / basket  (⚠️  OfferBar.tsx must start with "use client") */
+   /* client-only urgency bar / floating basket
+      (⚠️ OfferBar.tsx MUST start with "use client") */
    import OfferBar                 from "./OfferBar";
    
-   /* layout css */
+   /* page-specific styles */
    import styles from "./page.module.css";
    
-   /* ------------------------------------------------------------------ */
-   export default async function CoursePage({ params }: { params: { slug: string } }) {
+   /* ================================================================== */
+   export default async function CoursePage({ params }: any) {
      const { slug } = params;
    
-     /* fetch the course row */
+     /* -------- fetch course row -------------------------------------- */
      const { data: course, error } = await supabase
        .from("courses")
        .select(`
@@ -36,17 +37,17 @@
        .single();
    
      if (error || !course) {
-       console.error("Error fetching course", error);
+       console.error("Error fetching course:", error);
        return notFound();
      }
    
-     /* ---------------------------------------------------------------- */
+     /* -------- render ------------------------------------------------ */
      return (
        <>
-         {/* ---------- HERO ------------------------------------------------ */}
+         {/* HERO */}
          <Hero title={course.title} description={course.description} />
    
-         {/* ---------- 2-column layout ------------------------------------ */}
+         {/* MAIN 2-column layout */}
          <div className={styles.mainContainer}>
            {/* LEFT column */}
            <div className={styles.leftColumn}>
@@ -69,12 +70,11 @@
            </div>
          </div>
    
-         {/* ---------- urgency bar / floating basket (client-side) -------- */}
+         {/* urgency bar / basket (client) */}
          <OfferBar
            discountActive={course.discount_active}
-           expiresAt={course.expires_at}         /* ISO string | null */
-          
-      
+           expiresAt={course.expires_at}         // ISO string | null
+        
          />
        </>
      );
