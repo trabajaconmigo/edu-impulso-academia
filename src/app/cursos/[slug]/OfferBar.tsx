@@ -1,5 +1,5 @@
 /* --------------------------------------------------
-   OfferBar – CLIENT COMPONENT  (mobile-optimized text)
+   OfferBar – hides itself if the user already bought
    -------------------------------------------------- */
    "use client";
 
@@ -16,13 +16,13 @@
    }
    
    /* HH:MM:SS formatter */
-   const formatRemaining = (iso: string | null): string => {
+   const fmt = (iso: string | null) => {
      if (!iso) return "";
-     const ms = new Date(iso).getTime() - Date.now();
-     if (ms <= 0) return "";
-     const h = Math.floor(ms / 3_600_000);
-     const m = Math.floor((ms % 3_600_000) / 60_000);
-     const s = Math.floor((ms % 60_000) / 1_000);
+     const diff = new Date(iso).getTime() - Date.now();
+     if (diff <= 0) return "";
+     const h = Math.floor(diff / 3_600_000);
+     const m = Math.floor((diff % 3_600_000) / 60_000);
+     const s = Math.floor((diff % 60_000) / 1_000);
      return `${h.toString().padStart(2, "0")}:${m
        .toString()
        .padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
@@ -33,51 +33,66 @@
      discountActive,
      expiresAt,
    }: OfferBarProps) {
-     const [remaining, setRemaining] = useState(formatRemaining(expiresAt));
+     /* -------------- 1. check ownership ------------------ */
+     const [hasPurchased, setHasPurchased] = useState<boolean | null>(null);
    
-     /* tick every second */
+     useEffect(() => {
+       let cancelled = false;
+       (async () => {
+         const { data: sess } = await supabase.auth.getSession();
+         if (!sess.session) return setHasPurchased(false);
+         const userId = sess.session.user.id;
+         const { data, error } = await supabase
+           .from("purchases")
+           .select("id")
+           .eq("course_id", courseId)
+           .eq("user_id", userId)
+           .single();
+         if (!cancelled) setHasPurchased(!error && !!data);
+       })();
+       return () => {
+         cancelled = true;
+       };
+     }, [courseId]);
+   
+     /* -------------- 2. countdown ------------------------ */
+     const [remaining, setRemaining] = useState(fmt(expiresAt));
      useEffect(() => {
        if (!expiresAt) return;
-       const id = setInterval(
-         () => setRemaining(formatRemaining(expiresAt)),
-         1_000
-       );
-       return () => clearInterval(id);
+       const tid = setInterval(() => setRemaining(fmt(expiresAt)), 1_000);
+       return () => clearInterval(tid);
      }, [expiresAt]);
    
-     /* break-point */
+     /* -------------- 3. breakpoint ----------------------- */
      const [isMobile, setIsMobile] = useState(false);
      useEffect(() => {
        const mq = matchMedia("(max-width: 767px)");
-       const update = () => setIsMobile(mq.matches);
-       update();
-       mq.addEventListener("change", update);
-       return () => mq.removeEventListener("change", update);
+       const upd = () => setIsMobile(mq.matches);
+       upd();
+       mq.addEventListener("change", upd);
+       return () => mq.removeEventListener("change", upd);
      }, []);
    
-     /* buy handler */
+     /* -------------- 4. buy handler ---------------------- */
      const router = useRouter();
-     const handleBuy = useCallback(async () => {
+     const goCheckout = useCallback(async () => {
        const { data: sess } = await supabase.auth.getSession();
        if (!sess.session) return router.push("/auth/login");
        router.push(`/checkout?courseId=${courseId}`);
      }, [courseId, router]);
    
-     /* visibility */
-     const showBar = discountActive;
-     const showFab = !discountActive && isMobile;
+     /* -------------- 5. visibility flags ----------------- */
+     const showBar = discountActive && !hasPurchased;
+     const showFab = !discountActive && !hasPurchased && isMobile;
    
-     /* copy */
-     const text = isMobile
-       ? "¡Oferta termina pronto!"
-       : "¡Aprovecha la oferta antes de que termine!";
+     const copy = isMobile ? "¡Oferta termina pronto!" : "¡Aprovecha la oferta antes de que termine!";
    
      return (
        <>
          {showBar && (
-           <div className={styles.bar} onClick={handleBuy}>
+           <div className={styles.bar} onClick={goCheckout}>
              <span className={styles.clock}>{remaining || "--:--:--"}</span>
-             <span className={styles.text}>{text}</span>
+             <span className={styles.text}>{copy}</span>
              <FiShoppingCart className={styles.cartIcon} />
            </div>
          )}
@@ -86,7 +101,7 @@
            <button
              aria-label="Comprar curso"
              className={styles.fab}
-             onClick={handleBuy}
+             onClick={goCheckout}
            >
              <FiShoppingCart size={24} />
            </button>
