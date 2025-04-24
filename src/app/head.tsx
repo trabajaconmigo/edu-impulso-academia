@@ -2,30 +2,23 @@
 export default function Head() {
     return (
       <>
-        {/* === Google Tag Manager === */}
+        {/* === GA4 (gtag.js) === */}
+        <script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=GTM-N47392MZ"
+        />
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-              new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-              j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-              'https://www.googletagmanager.com/gtm.js?id=GTM-N47392MZ'+dl;
-              f.parentNode.insertBefore(j,f);
-              })(window,document,'script','dataLayer','GTM-N47392MZ');
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'GTM-N47392MZ', {
+                page_path: window.location.pathname
+              });
             `,
           }}
         />
-        {/* Optional noscript for users without JS */}
-        <noscript>
-          <iframe
-            src="https://www.googletagmanager.com/ns.html?id=GTM-N47392MZ"
-            height="0"
-            width="0"
-            style={{ display: 'none', visibility: 'hidden' }}
-          />
-        </noscript>
-    
-
 
       {/* === Facebook Pixel === */}
       <script
