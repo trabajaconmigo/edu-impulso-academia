@@ -8,27 +8,41 @@
    import styles from "./BuyButton.module.css";
    
    interface BuyButtonProps {
-     course: { id: string };
+     course: {
+       id: string;
+       price: number;                 // precio base en MXN
+       discount_percentage?: number;  // opcional
+       discount_active?: boolean;     // opcional
+     };
    }
    
    export default function BuyButton({ course }: BuyButtonProps) {
      const router = useRouter();
    
-     async function handleBuy() {
-       /* If the user isn’t logged in, send them to login first */
-       const { data: sess } = await supabase.auth.getSession();
-       if (!sess.session) {
-         router.push("/auth/login");
-         return;
+     /* -------------------------------------------------------------- */
+     function computeFinalPrice(): number {
+       const { price, discount_percentage = 0, discount_active = false } = course;
+       if (discount_active && discount_percentage > 0) {
+         return Number((price * (1 - discount_percentage / 100)).toFixed(2));
        }
-   
-       /* Otherwise go straight to your checkout page */
-       router.push(`/checkout?courseId=${course.id}`);
+       return price;
      }
    
+     async function handleBuy() {
+       /* If the user is already logged-in we still send them to checkout,
+          otherwise the checkout page will render the inline login/register form. */
+       const finalMXN    = computeFinalPrice();       // eg 199.9
+       const amountCents = Math.round(finalMXN * 100);
+   
+       router.push(
+         `/checkout?courseId=${course.id}&amount=${amountCents}`
+       );
+     }
+   
+     /* -------------------------------------------------------------- */
      return (
        <button
-         data-buy-button          /* ← key for OfferBar to locate it */
+         data-buy-button          /* For OfferBar auto-click */
          onClick={handleBuy}
          className={styles.buyButton}
        >
