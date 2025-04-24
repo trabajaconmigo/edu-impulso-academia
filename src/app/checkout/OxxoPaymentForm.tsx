@@ -1,4 +1,3 @@
-// src/app/checkout/OxxoPaymentForm.tsx
 "use client";
 
 import React, { useState } from "react";
@@ -7,6 +6,7 @@ import styles from "./OxxoPaymentForm.module.css";
 
 interface OxxoPaymentFormProps {
   courseId: string;
+  amountCents: number;
 }
 
 interface OxxoNextAction {
@@ -15,7 +15,10 @@ interface OxxoNextAction {
   };
 }
 
-export default function OxxoPaymentForm({ courseId }: OxxoPaymentFormProps) {
+export default function OxxoPaymentForm({
+  courseId,
+  amountCents,
+}: OxxoPaymentFormProps) {
   const stripe = useStripe();
   const [loading, setLoading] = useState<boolean>(false);
   const [voucherUrl, setVoucherUrl] = useState<string>("");
@@ -25,11 +28,11 @@ export default function OxxoPaymentForm({ courseId }: OxxoPaymentFormProps) {
     setLoading(true);
     setErrorMsg("");
 
-    // 1) Crear PaymentIntent para OXXO con sólo courseId
+    // 1) Crear PaymentIntent para OXXO con courseId y amountCents
     const res = await fetch("/api/create-payment-intent-oxxo", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ courseId }),
+      body: JSON.stringify({ courseId, amountCents }),
     });
     const { clientSecret, error } = await res.json();
     if (error || !clientSecret) {

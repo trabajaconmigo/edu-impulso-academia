@@ -1,4 +1,3 @@
-// src/app/checkout/CheckoutForm.tsx
 "use client";
 
 import React, { useState } from "react";
@@ -8,9 +7,13 @@ import styles from "./CheckoutForm.module.css";
 
 interface CheckoutFormProps {
   courseId: string;
+  amountCents: number;
 }
 
-export default function CheckoutForm({ courseId }: CheckoutFormProps) {
+export default function CheckoutForm({
+  courseId,
+  amountCents,
+}: CheckoutFormProps) {
   const stripe = useStripe();
   const elements = useElements();
   const [errorMsg, setErrorMsg] = useState<string>("");
@@ -22,11 +25,11 @@ export default function CheckoutForm({ courseId }: CheckoutFormProps) {
     setLoading(true);
     setErrorMsg("");
 
-    // 1) Crear PaymentIntent con sólo courseId
+    // 1) Crear PaymentIntent con courseId y amountCents
     const res = await fetch("/api/create-payment-intent", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ courseId }),
+      body: JSON.stringify({ courseId, amountCents }),
     });
     const { clientSecret, error } = await res.json();
     if (error || !clientSecret) {
