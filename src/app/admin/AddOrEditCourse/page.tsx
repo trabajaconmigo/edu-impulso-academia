@@ -6,8 +6,8 @@
    import React, { useEffect, useState } from "react";
    import { supabase } from "@/lib/supabaseClient";
    import { useRouter } from "next/navigation";
-   import { COURSE_CATEGORIES } from "@/app/components/courseCategories";
    import InstructorPopup from "./InstructorPopup";
+   import CourseBasicInfo from "./CourseBasicInfo";
    import styles from "./styles/AddOrEditCourse.module.css";
    
    /* ---------- Constants ------------------------------------------------- */
@@ -79,7 +79,7 @@
      /* discount */
      discount_percentage: number;
      discount_active: boolean;
-     expires_at?: string | null; // ← NEW  🔥
+     expires_at?: string | null;
    
      /* HTML fields */
      course_includes?: string;
@@ -162,16 +162,11 @@
          if (!data) return;
          setCourse({
            ...(data as CourseData),
-           /* convert timestamp → input-friendly   */
-           expires_at: data.expires_at
-             ? new Date(data.expires_at).toISOString().slice(0, 16)
-             : null,
+           expires_at: data.expires_at ? new Date(data.expires_at).toISOString().slice(0, 16) : null,
          });
    
          if (data.what_you_ll_learn)
-           setLearningPoints(
-             data.what_you_ll_learn.split(/\r?\n+/).filter((s: string) => s.trim())
-           );
+           setLearningPoints(data.what_you_ll_learn.split(/\r?\n+/).filter((s: string) => s.trim()));
          if (data.requirements) setRequirementsPoints(parseLiHTML(data.requirements));
          if (data.description_long) setDescParas(parseParasHTML(data.description_long));
          if (data.course_includes) setFeatures(parseFeaturesHTML(data.course_includes));
@@ -187,19 +182,26 @@
        }
      }
    
-     /* --------- Generic form change ------------------------------------ */
+     /* --------- Change helpers ----------------------------------------- */
    
      function handleCourseChange(
        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
      ) {
        const { name, type } = e.target;
        let value: any = (e.target as any).value;
-   
        if (type === "checkbox") value = (e.target as HTMLInputElement).checked;
        else if (type === "number") value = parseFloat(value) || 0;
-   
        setCourse((prev) => ({ ...prev, [name]: value }));
      }
+   
+     // Cambio proveniente de CourseBasicInfo
+     const handleBasicInfoChange = (name: string, value: any) =>
+       setCourse((prev) => ({ ...prev, [name]: value }));
+   
+     const handleShowInstructorPopup = (inst: InstructorRow | null) => {
+       setEditingInstructor(inst);
+       setShowInstructorPopup(true);
+     };
    
      /* --------- HTML helpers ------------------------------------------- */
    
@@ -238,12 +240,12 @@
            arr.map((p) => `  <li>${p}</li>`).join("\n") +
            "\n</ul>";
      const buildDescriptionHTML = (paras: string[]) =>
-       paras
-         .map((p, i) => (i ? `<p style="margin-top:1rem;">${p}</p>` : `<p>${p}</p>`))
-         .join("\n");
+       paras.map((p, i) =>
+         i ? `<p style="margin-top:1rem;">${p}</p>` : `<p>${p}</p>`
+       ).join("\n");
    
      /* --------- Sections helpers --------------------------------------- */
-   
+     // (sin cambios) ------------------------------------------------------
      function buildSections(rows: any[]) {
        const secs = rows.filter((r) => r.type === "section");
        const lecs = rows.filter((r) => r.type === "lecture");
@@ -268,6 +270,7 @@
      }
    
      async function saveSectionsAndLessons(course_id: string) {
+       // (código idéntico al original)
        for (const sec of sections) {
          let sectionId = sec.id;
          if (!sectionId) {
@@ -360,7 +363,8 @@
        }
      }
    
-     /* --------- Learning points, requirements, description helpers ------ */
+     /* --------- Learning / Req / Desc helpers --------------------------- */
+     // (idénticos a los originales)
      const addLearningPoint = () => setLearningPoints((p) => [...p, ""]);
      const removeLearningPoint = (i: number) =>
        setLearningPoints((p) => p.filter((_, idx) => idx !== i));
@@ -374,17 +378,19 @@
        setRequirementsPoints((p) => p.map((e, idx) => (idx === i ? v : e)));
    
      const addDescPara = () => setDescParas((p) => [...p, ""]);
-     const removeDescPara = (i: number) => setDescParas((p) => p.filter((_, idx) => idx !== i));
+     const removeDescPara = (i: number) =>
+       setDescParas((p) => p.filter((_, idx) => idx !== i));
      const handleDescChange = (i: number, v: string) =>
        setDescParas((p) => p.map((e, idx) => (idx === i ? v : e)));
    
-     /* --------- Features ------------------------------------------------ */
+     /* --------- Features helpers --------------------------------------- */
      const addFeature = () => setFeatures((f) => [...f, { iconUrl: "", text: "" }]);
      const removeFeature = (i: number) => setFeatures((f) => f.filter((_, idx) => idx !== i));
      const handleFeatureChange = (i: number, name: "iconUrl" | "text", value: string) =>
        setFeatures((f) => f.map((e, idx) => (idx === i ? { ...e, [name]: value } : e)));
    
      /* --------- Sections & Lessons helpers ------------------------------ */
+     // (idénticos a los originales)
      const addSection = () =>
        setSections((s) => [...s, { title: "", order_index: s.length + 1, lessons: [] }]);
      const removeSection = (i: number) => setSections((s) => s.filter((_, idx) => idx !== i));
@@ -416,9 +422,7 @@
      const removeLesson = (secIdx: number, lesIdx: number) =>
        setSections((s) =>
          s.map((sec, idx) =>
-           idx === secIdx
-             ? { ...sec, lessons: sec.lessons.filter((_, li) => li !== lesIdx) }
-             : sec
+           idx === secIdx ? { ...sec, lessons: sec.lessons.filter((_, li) => li !== lesIdx) } : sec
          )
        );
    
@@ -449,7 +453,6 @@
        try {
          const payload = {
            ...course,
-           /* convert back datetime-local → ISO  */
            expires_at: course.expires_at ? new Date(course.expires_at).toISOString() : null,
            course_includes: buildFeaturesHTML(features),
            what_you_ll_learn: learningPoints.join("\n\n"),
@@ -504,96 +507,18 @@
            <p>Cargando…</p>
          ) : (
            <form onSubmit={handleSubmit} className={styles.formArea}>
-             {/* ---------- CARD: Información del Curso ---------------------- */}
+             {/* ---------- COMPONENTE: Información del Curso ---------------- */}
+             <CourseBasicInfo
+               course={course}
+               instructors={instructors}
+               onChange={handleBasicInfoChange}
+               onShowInstructorPopup={handleShowInstructorPopup}
+             />
+   
+             {/* ---------- CARD: Imagen, Descuento & Expiración ------------- */}
              <div className={styles.card}>
-               <h2 className={styles.cardTitle}>Información del Curso</h2>
-   
-               {/* basic inputs */}
-               {[
-                 { label: "Título del Curso", name: "title", value: course.title },
-                 { label: "Slug", name: "slug", value: course.slug },
-               ].map((f) => (
-                 <div className={styles.fieldGroup} key={f.name}>
-                   <label>{f.label}</label>
-                   <input
-                     type="text"
-                     name={f.name}
-                     value={f.value}
-                     onChange={handleCourseChange}
-                     required
-                   />
-                 </div>
-               ))}
-   
-               <div className={styles.fieldGroup}>
-                 <label>Descripción Breve</label>
-                 <textarea
-                   rows={3}
-                   name="description"
-                   value={course.description}
-                   onChange={handleCourseChange}
-                   required
-                 />
-               </div>
-   
-               <div className={styles.fieldGroup}>
-                 <label>Subtítulo</label>
-                 <input
-                   type="text"
-                   name="subtitle"
-                   value={course.subtitle || ""}
-                   onChange={handleCourseChange}
-                 />
-               </div>
-   
-               {/* Instructor select */}
-               <div className={styles.fieldGroup}>
-                 <label>Instructor</label>
-                 <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-                   <select
-                     name="instructor_id"
-                     value={course.instructor_id || ""}
-                     onChange={handleCourseChange}
-                   >
-                     <option value="">-- Seleccionar --</option>
-                     {instructors.map((i) => (
-                       <option key={i.id} value={i.id}>
-                         {i.full_name}
-                       </option>
-                     ))}
-                   </select>
-                   <button
-                     type="button"
-                     style={{
-                       border: "1px solid blue",
-                       background: "transparent",
-                       color: "blue",
-                       padding: "0.4rem 0.8rem",
-                     }}
-                     onClick={() => {
-                       if (course.instructor_id) {
-                         const inst = instructors.find((i) => i.id === course.instructor_id);
-                         setEditingInstructor(inst || null);
-                       } else setEditingInstructor(null);
-                       setShowInstructorPopup(true);
-                     }}
-                   >
-                     {course.instructor_id ? "Editar Instructor" : "Crear Instructor"}
-                   </button>
-                 </div>
-               </div>
-   
-               {/* Thumbnail + upload */}
-               <div className={styles.fieldGroup}>
-                 <label>Thumbnail URL</label>
-                 <input
-                   type="text"
-                   name="thumbnail_url"
-                   value={course.thumbnail_url}
-                   onChange={handleCourseChange}
-                   required
-                 />
-               </div>
+               {/* Subir Imagen */}
+               <h2 className={styles.cardTitle}>Imagen & Descuento</h2>
                <div className={styles.fieldGroup}>
                  <label>Subir Imagen (750×500)</label>
                  <div className={styles.fileUploadWrapper}>
@@ -628,46 +553,7 @@
                  )}
                </div>
    
-               {/* price & language */}
-               <div className={styles.fieldRow}>
-                 <div className={styles.fieldCol}>
-                   <label>Precio (MXN)</label>
-                   <input
-                     type="number"
-                     name="price"
-                     value={course.price}
-                     onChange={handleCourseChange}
-                     required
-                   />
-                 </div>
-                 <div className={styles.fieldCol}>
-                   <label>Idioma</label>
-                   <input
-                     type="text"
-                     name="language"
-                     value={course.language}
-                     onChange={handleCourseChange}
-                   />
-                 </div>
-               </div>
-   
-               {/* category */}
-               <div className={styles.fieldGroup}>
-                 <label>Categoría</label>
-                 <select
-                   name="category"
-                   value={course.category}
-                   onChange={handleCourseChange}
-                 >
-                   {COURSE_CATEGORIES.map((c) => (
-                     <option key={c.value} value={c.value}>
-                       {c.label}
-                     </option>
-                   ))}
-                 </select>
-               </div>
-   
-               {/* ---- Discount & Expiration ---- */}
+               {/* Descuento */}
                <div className={styles.fieldRow}>
                  <div className={styles.fieldCol}>
                    <label>% Descuento</label>
@@ -692,7 +578,7 @@
                  </div>
                </div>
    
-               {/* expiration datetime */}
+               {/* Expiración */}
                <div className={styles.fieldGroup}>
                  <label>Vence (fecha y hora)</label>
                  <input
@@ -706,6 +592,12 @@
                  </small>
                </div>
              </div>
+   
+             {/* ---------- RESTO DE CARDS (sin cambios) --------------------- */}
+             {/* Lo que aprenderás, Requisitos, Descripción Larga, Este curso incluye,
+                 Secciones & Lecciones, Submit */}
+             {/* ----- La implementación es la misma que el original y se mantiene aquí ----- */}
+             {/* ... (todo el código de las cards restantes permanece idéntico) ... */}
    
              {/* ---------- CARD: Lo que aprenderás -------------------------- */}
              <div className={styles.card}>
@@ -832,6 +724,8 @@
                <h2 className={styles.cardTitle}>Secciones & Lecciones</h2>
                {sections.map((sec, secIdx) => (
                  <div key={secIdx} className={styles.sectionCard}>
+                   {/* ... (idéntico al original) ... */}
+                   {/* header sección */}
                    <div className={styles.sectionHeader}>
                      <div>
                        <label>Título</label>
@@ -861,7 +755,7 @@
                      </button>
                    </div>
    
-                   {/* lessons */}
+                   {/* lecciones */}
                    <div className={styles.lessonsWrapper}>
                      {sec.lessons.map((les, lesIdx) => (
                        <div key={lesIdx} className={styles.lessonCard}>
@@ -899,12 +793,7 @@
                                type="text"
                                value={les.youtube_link}
                                onChange={(e) =>
-                                 handleLessonChange(
-                                   secIdx,
-                                   lesIdx,
-                                   "youtube_link",
-                                   e.target.value
-                                 )
+                                 handleLessonChange(secIdx, lesIdx, "youtube_link", e.target.value)
                                }
                              />
                            </div>
