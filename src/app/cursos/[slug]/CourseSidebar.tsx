@@ -1,4 +1,4 @@
-// src/app/components/CourseSidebar.tsx
+// src/app/course/[slug]/CourseSidebar.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -16,7 +16,6 @@ interface Course {
   discount_percentage: number;  // Nuevo
   discount_active: boolean;     // Nuevo
   course_includes?: string;
-  
   preview_video?: string;
 }
 
@@ -64,6 +63,45 @@ export default function CourseSidebar({ course }: CourseSidebarProps) {
       console.error("No preview video available");
     }
   };
+
+  // ── PIXEL TRACKING: attach AddToCart listeners to the BuyButton ──
+  useEffect(() => {
+    // query for the actual <button> rendered by BuyButton
+    const btn = document.querySelector(`.${styles.buyButton} button`);
+    if (!btn) return;
+
+    const clickHandler = () => {
+      // Facebook AddToCart
+      if (typeof window !== "undefined" && (window as any).fbq) {
+        (window as any).fbq("track", "AddToCart", {
+          content_ids: [course.id],
+          content_type: "product",
+          value: finalPrice,
+          currency: "MXN",
+        });
+      }
+      // TikTok AddToCart
+      if (typeof window !== "undefined" && (window as any).ttq) {
+        (window as any).ttq.track("AddToCart", {
+          content_id: String(course.id),
+          content_type: "product",
+          price: finalPrice,
+          currency: "MXN",
+        });
+      }
+      // GA4 add_to_cart
+      if (typeof window !== "undefined" && (window as any).gtag) {
+        (window as any).gtag("event", "add_to_cart", {
+          items: [{ id: course.id, currency: "MXN", price: finalPrice }],
+        });
+      }
+    };
+
+    btn.addEventListener("click", clickHandler);
+    return () => {
+      btn.removeEventListener("click", clickHandler);
+    };
+  }, [course.id, finalPrice]);
 
   return (
     <div className={styles.sidebar}>
