@@ -5,7 +5,7 @@ export default function Head() {
         {/* === GA4 (gtag.js) === */}
         <script
           async
-          src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"
+          src="https://www.googletagmanager.com/gtag/js?id=G-7H0Y5YPLXJ"
         />
         <script
           dangerouslySetInnerHTML={{
@@ -13,7 +13,7 @@ export default function Head() {
               window.dataLayer = window.dataLayer || [];
               function gtag(){dataLayer.push(arguments);}
               gtag('js', new Date());
-              gtag('config', 'G-XXXXXXXXXX', {
+              gtag('config', 'G-7H0Y5YPLXJ', {
                 page_path: window.location.pathname
               });
             `,
