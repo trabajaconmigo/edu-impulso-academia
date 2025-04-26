@@ -1,0 +1,36 @@
+.form {
+  border: 1px solid #ddd;
+  padding: 1rem;
+  border-radius: 6px;
+  margin: 2rem 0;
+  text-align: center;
+}
+.controls {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+input[type="email"] {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 200px;
+}
+button {
+  padding: 0.5rem 1rem;
+  background: #ff5864;
+  border: none;
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.thanks {
+  text-align: center;
+  font-style: italic;
+  color: #555;
+}

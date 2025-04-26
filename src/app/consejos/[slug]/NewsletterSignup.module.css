@@ -1,0 +1,31 @@
+.block {
+  margin: 3rem 0;
+  padding: 1.5rem;
+  background: #f5f5f5;
+  border-radius: 8px;
+  text-align: center;
+}
+.form {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.form input {
+  padding: 0.5rem 0.75rem;
+  min-width: 250px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+.form button {
+  padding: 0.5rem 1rem;
+  background: #ff5864;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.form button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

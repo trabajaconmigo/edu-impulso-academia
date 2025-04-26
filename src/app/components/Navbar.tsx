@@ -123,8 +123,8 @@ export default function EduNavbar() {
         <Link href="/cursos" className={styles.centerLink}>
           Cursos
         </Link>
-        <Link href="/concejos" className={styles.centerLink}>
-          Concejos
+        <Link href="/consejos" className={styles.centerLink}>
+          Consejos
         </Link>
       </div>
 
