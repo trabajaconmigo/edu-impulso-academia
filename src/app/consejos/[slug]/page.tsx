@@ -168,24 +168,6 @@ export default function ConsejoDetailPage() {
         </aside>
       </article>
 
-      {/* ===== Slider de cursos misma categoría ===== */}
-      <CourseCarousel category={post.category} />
-
-      {/* ===== Consejos relacionados ===== */}
-      {related.length > 0 && (
-        <section className={styles.relatedWrap}>
-          <h2>También puede interesarte</h2>
-          <div className={styles.relatedRow} ref={allPostsContainerRef}>
-            {related.map((r) => (
-              <Link key={r.id} href={`/consejos/${r.slug}`} className={styles.card}>
-                <img src={safeUrl(r.main_photo)} alt={r.title} />
-                <span>{r.title}</span>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
-
       {/* ===== Formulario newsletter ===== */}
       <section className={styles.leadForm}>
         <h3>Únete a nuestra newsletter</h3>
@@ -207,6 +189,26 @@ export default function ConsejoDetailPage() {
         </form>
       </section>
 
+
+      {/* ===== Slider de cursos misma categoría ===== */}
+      <CourseCarousel category={post.category} />
+
+      {/* ===== Consejos relacionados ===== */}
+      {related.length > 0 && (
+        <section className={styles.relatedWrap}>
+          <h2>También puede interesarte</h2>
+          <div className={styles.relatedRow} ref={allPostsContainerRef}>
+            {related.map((r) => (
+              <Link key={r.id} href={`/consejos/${r.slug}`} className={styles.card}>
+                <img src={safeUrl(r.main_photo)} alt={r.title} />
+                <span>{r.title}</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      
       {/* ===== Popup compartir ===== */}
       {shareOpen && (
         <div className={styles.shareOverlay} onClick={() => setShareOpen(false)}>
