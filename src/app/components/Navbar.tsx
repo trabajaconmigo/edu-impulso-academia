@@ -118,7 +118,7 @@ export default function EduNavbar() {
         </Link>
       </div>
 
-      {/* Center: "Cursos" & "Concejos" (hidden on mobile) */}
+      {/* Center: "Cursos" & "Consejos" (hidden on mobile) */}
       <div className={styles.navCenter}>
         <Link href="/cursos" className={styles.centerLink}>
           Cursos
@@ -198,7 +198,7 @@ export default function EduNavbar() {
             </div>
 
             <div className={styles.drawerMenu}>
-              {/* "Cursos" & "Concejos" in the drawer */}
+              {/* "Cursos" & "Consejos" in the drawer */}
               <Link
                 href="/cursos"
                 className={styles.drawerItem}
@@ -207,11 +207,11 @@ export default function EduNavbar() {
                 Cursos
               </Link>
               <Link
-                href="/concejos"
+                href="/consejos"
                 className={styles.drawerItem}
                 onClick={() => setMenuOpen(false)}
               >
-                Concejos
+                Consejos
               </Link>
               <hr className={styles.drawerDivider} />
 

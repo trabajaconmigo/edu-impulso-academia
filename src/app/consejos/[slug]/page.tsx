@@ -1,5 +1,8 @@
-// src/app/consejos/[slug]/page.tsx
-'use client';
+/* --------------------------------------------------------------------
+   src/app/consejos/[slug]/page.tsx
+-------------------------------------------------------------------- */
+
+"use client";
 
 import { useEffect, useState, useRef, FormEvent } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -8,11 +11,12 @@ import Image from 'next/image';
 
 import { supabase } from '@/lib/supabaseClient';
 import HomeNavbar from '@/app/components/Navbar';
-import Footer from '@/app/components/Footer';
+import CourseCarousel from '@/app/components/CourseCarousel'; // NEW: Slider de cursos por categoría
 
 import DOMPurify from 'dompurify';
 import styles from './ConsejoDetail.module.css';
 
+/* ----------------------- Interfaces ----------------------- */
 interface Consejo {
   id: string;
   title: string;
@@ -25,6 +29,7 @@ interface Consejo {
   created_at: string;
 }
 
+/* -------------------- Página de detalle -------------------- */
 export default function ConsejoDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const router = useRouter();
@@ -37,15 +42,18 @@ export default function ConsejoDetailPage() {
   const [lead, setLead] = useState({ name: '', email: '', job: '', state: '' });
   const allPostsContainerRef = useRef<HTMLDivElement>(null);
 
+  /* -------------------- URL segura para imágenes -------------------- */
   const safeUrl = (url?: string) =>
     url && !/^https?:\/\/via\.placeholder/.test(url)
       ? url
       : '/trabaja_conmigo_1.jpg';
 
+  /* -------------------- Fetch de datos -------------------- */
   useEffect(() => {
     if (!slug) return;
+
     (async () => {
-      // fetch the single post
+      // Obtener el post principal
       const { data: p, error: e1 } = await supabase
         .from('consejos')
         .select('*')
@@ -59,7 +67,7 @@ export default function ConsejoDetailPage() {
       }
       setPost(p as Consejo);
 
-      // fetch related
+      // Obtener consejos relacionados
       if (p.category) {
         const { data: rel } = await supabase
           .from('consejos')
@@ -72,39 +80,39 @@ export default function ConsejoDetailPage() {
         setRelated(rel as Consejo[]);
       }
 
-      // fetch categories for sidebar
+      // Obtener lista de categorías para el sidebar
       const { data: cats } = await supabase
         .from('consejos')
         .select('category')
         .eq('published', true);
       setCategories(
-        Array.from(new Set((cats ?? []).map((c) => c.category).filter(Boolean)))
+        Array.from(
+          new Set((cats ?? []).map((c) => c.category).filter(Boolean))
+        )
       );
     })();
   }, [slug, router]);
 
+  /* -------------------- Manejar envío de lead -------------------- */
   async function handleLead(e: FormEvent) {
     e.preventDefault();
     const { error } = await supabase.from('newsletter').insert([
-      {
-        name: lead.name,
-        email: lead.email,
-        job_category: lead.job,
-        state: lead.state,
-      },
+      { name: lead.name, email: lead.email, job_category: lead.job, state: lead.state }
     ]);
-    if (!error) router.push(`/register?name=${encodeURIComponent(lead.name)}`);
+    if (!error) {
+      router.push(`/register?name=${encodeURIComponent(lead.name)}`);
+    }
   }
 
   if (!post) return null;
 
-  // sanitize and append photo2
+  /* -------------------- Sanitizar HTML + photo2 -------------------- */
   const html = DOMPurify.sanitize(
     post.content +
       (post.photo2
-        ? `<div class="${styles.photo2Wrap}">
-             <img src="${safeUrl(post.photo2)}" class="${styles.photo2}" alt="" />
-           </div>`
+        ? `<div class=\"${styles.photo2Wrap}\"><img src=\"${safeUrl(
+            post.photo2
+          )}\" class=\"${styles.photo2}\" alt=\"\" /></div>`
         : '')
   );
 
@@ -115,7 +123,6 @@ export default function ConsejoDetailPage() {
       <article className={styles.article}>
         <section className={styles.mainCol}>
           <h1 className={styles.title}>{post.title}</h1>
-          {/* hero image */}
           <img
             src={safeUrl(post.main_photo)}
             alt={post.title}
@@ -130,7 +137,6 @@ export default function ConsejoDetailPage() {
         </section>
 
         <aside className={styles.sidebar}>
-          {/* share */}
           <button
             className={styles.shareBtn}
             onClick={() => setShareOpen(true)}
@@ -139,7 +145,6 @@ export default function ConsejoDetailPage() {
             <Image src="/icons/share-icon.svg" alt="" width={24} height={24} />
           </button>
 
-          {/* topics */}
           <section className={styles.topics}>
             <h3>Temas populares</h3>
             <ul>
@@ -151,7 +156,6 @@ export default function ConsejoDetailPage() {
             </ul>
           </section>
 
-          {/* desktop banner */}
           <div className={styles.desktopBanner}>
             <Image
               src="/gifs/desktop-banner.gif"
@@ -164,17 +168,16 @@ export default function ConsejoDetailPage() {
         </aside>
       </article>
 
-      {/* related */}
+      {/* ===== Slider de cursos misma categoría ===== */}
+      <CourseCarousel category={post.category} />
+
+      {/* ===== Consejos relacionados ===== */}
       {related.length > 0 && (
         <section className={styles.relatedWrap}>
           <h2>También puede interesarte</h2>
           <div className={styles.relatedRow} ref={allPostsContainerRef}>
             {related.map((r) => (
-              <Link
-                key={r.id}
-                href={`/consejos/${r.slug}`}
-                className={styles.card}
-              >
+              <Link key={r.id} href={`/consejos/${r.slug}`} className={styles.card}>
                 <img src={safeUrl(r.main_photo)} alt={r.title} />
                 <span>{r.title}</span>
               </Link>
@@ -183,7 +186,7 @@ export default function ConsejoDetailPage() {
         </section>
       )}
 
-      {/* newsletter form */}
+      {/* ===== Formulario newsletter ===== */}
       <section className={styles.leadForm}>
         <h3>Únete a nuestra newsletter</h3>
         <form onSubmit={handleLead}>
@@ -204,16 +207,10 @@ export default function ConsejoDetailPage() {
         </form>
       </section>
 
-      {/* share popup */}
+      {/* ===== Popup compartir ===== */}
       {shareOpen && (
-        <div
-          className={styles.shareOverlay}
-          onClick={() => setShareOpen(false)}
-        >
-          <div
-            className={styles.shareBox}
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className={styles.shareOverlay} onClick={() => setShareOpen(false)}>
+          <div className={styles.shareBox} onClick={(e) => e.stopPropagation()}>
             <h4>Compartir</h4>
             <button
               onClick={() =>
@@ -243,8 +240,6 @@ export default function ConsejoDetailPage() {
           </div>
         </div>
       )}
-
-     
     </div>
   );
 }
