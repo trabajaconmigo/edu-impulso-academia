@@ -1,22 +1,22 @@
 /* --------------------------------------------------------------------
-   src/app/consejos/[slug]/page.tsx
+   src/app/consejos/[slug]/page.tsx   (versión con render condicional)
 -------------------------------------------------------------------- */
 
 "use client";
 
-import { useEffect, useState, useRef, FormEvent } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
-import Image from 'next/image';
+import { useEffect, useState, useRef } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
+import DOMPurify from "dompurify";
 
-import { supabase } from '@/lib/supabaseClient';
-import HomeNavbar from '@/app/components/Navbar';
-import CourseCarousel from '@/app/components/CourseCarousel'; // NEW: Slider de cursos por categoría
+import { supabase } from "@/lib/supabaseClient";
+import CourseCarousel from "@/app/components/CourseCarousel";
+import NewsletterPopup from "./NewsletterPopup";
+import NewsletterInline from "./NewsletterInline";
+import styles from "./ConsejoDetail.module.css";
 
-import DOMPurify from 'dompurify';
-import styles from './ConsejoDetail.module.css';
-
-/* ----------------------- Interfaces ----------------------- */
+/* ----- Tipo de consejo ----- */
 interface Consejo {
   id: string;
   title: string;
@@ -27,9 +27,10 @@ interface Consejo {
   photo2?: string;
   content: string;
   created_at: string;
+  gift_msg?: string | null;
+  gift_pdf_url?: string | null;
 }
 
-/* -------------------- Página de detalle -------------------- */
 export default function ConsejoDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const router = useRouter();
@@ -38,88 +39,76 @@ export default function ConsejoDetailPage() {
   const [related, setRelated] = useState<Consejo[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [shareOpen, setShareOpen] = useState(false);
-
-  const [lead, setLead] = useState({ name: '', email: '', job: '', state: '' });
   const allPostsContainerRef = useRef<HTMLDivElement>(null);
 
-  /* -------------------- URL segura para imágenes -------------------- */
+  /* ---------- Helper imagen ---------- */
   const safeUrl = (url?: string) =>
-    url && !/^https?:\/\/via\.placeholder/.test(url)
+    url &&
+    !url.startsWith("https://via.placeholder") &&
+    !url.startsWith("http://via.placeholder")
       ? url
-      : '/trabaja_conmigo_1.jpg';
+      : "/trabaja_conmigo_1.jpg";
 
-  /* -------------------- Fetch de datos -------------------- */
+  /* ---------- Fetch ---------- */
   useEffect(() => {
     if (!slug) return;
 
     (async () => {
-      // Obtener el post principal
-      const { data: p, error: e1 } = await supabase
-        .from('consejos')
-        .select('*')
-        .eq('slug', slug)
-        .eq('published', true)
+      /* post */
+      const { data: p, error } = await supabase
+        .from("consejos")
+        .select("*")
+        .eq("slug", slug)
+        .eq("published", true)
         .single();
 
-      if (e1 || !p) {
-        router.push('/consejos');
+      if (error || !p) {
+        router.push("/consejos");
         return;
       }
       setPost(p as Consejo);
 
-      // Obtener consejos relacionados
+      /* relacionados */
       if (p.category) {
-        const { data: rel } = await supabase
-          .from('consejos')
-          .select('id,title,slug,main_photo')
-          .eq('category', p.category)
-          .neq('id', p.id)
-          .eq('published', true)
-          .order('created_at', { ascending: false })
+        const { data } = await supabase
+          .from("consejos")
+          .select("id,title,slug,main_photo")
+          .eq("category", p.category)
+          .neq("id", p.id)
+          .eq("published", true)
+          .order("created_at", { ascending: false })
           .limit(6);
-        setRelated(rel as Consejo[]);
+        setRelated(data as Consejo[]);
       }
 
-      // Obtener lista de categorías para el sidebar
+      /* categorías populares */
       const { data: cats } = await supabase
-        .from('consejos')
-        .select('category')
-        .eq('published', true);
+        .from("consejos")
+        .select("category")
+        .eq("published", true);
       setCategories(
-        Array.from(
-          new Set((cats ?? []).map((c) => c.category).filter(Boolean))
-        )
+        Array.from(new Set((cats ?? []).map((c) => c.category).filter(Boolean)))
       );
     })();
   }, [slug, router]);
 
-  /* -------------------- Manejar envío de lead -------------------- */
-  async function handleLead(e: FormEvent) {
-    e.preventDefault();
-    const { error } = await supabase.from('newsletter').insert([
-      { name: lead.name, email: lead.email, job_category: lead.job, state: lead.state }
-    ]);
-    if (!error) {
-      router.push(`/register?name=${encodeURIComponent(lead.name)}`);
-    }
-  }
-
   if (!post) return null;
 
-  /* -------------------- Sanitizar HTML + photo2 -------------------- */
   const html = DOMPurify.sanitize(
     post.content +
       (post.photo2
-        ? `<div class=\"${styles.photo2Wrap}\"><img src=\"${safeUrl(
+        ? `<div class="${styles.photo2Wrap}"><img src="${safeUrl(
             post.photo2
-          )}\" class=\"${styles.photo2}\" alt=\"\" /></div>`
-        : '')
+          )}" class="${styles.photo2}" alt="" /></div>`
+        : "")
   );
+
+  /* Mostrar newsletter solo si hay mensaje o PDF */
+  const showNewsletter = !!(post.gift_msg || post.gift_pdf_url);
 
   return (
     <div className={styles.wrapper}>
-      <HomeNavbar />
-
+      {/* -------- Artículo -------- */}
       <article className={styles.article}>
         <section className={styles.mainCol}>
           <h1 className={styles.title}>{post.title}</h1>
@@ -136,6 +125,7 @@ export default function ConsejoDetailPage() {
           />
         </section>
 
+        {/* -------- Sidebar -------- */}
         <aside className={styles.sidebar}>
           <button
             className={styles.shareBtn}
@@ -168,48 +158,28 @@ export default function ConsejoDetailPage() {
         </aside>
       </article>
 
-      {/* ===== Formulario newsletter ===== */}
-      <section className={styles.leadForm}>
-        <h3>Únete a nuestra newsletter</h3>
-        <form onSubmit={handleLead}>
-          <input
-            placeholder="Nombre"
-            value={lead.name}
-            onChange={(e) => setLead({ ...lead, name: e.target.value })}
-            required
-          />
-          <input
-            type="email"
-            placeholder="Correo"
-            value={lead.email}
-            onChange={(e) => setLead({ ...lead, email: e.target.value })}
-            required
-          />
-          <button type="submit">Suscribirme</button>
-        </form>
-      </section>
-
-
-      {/* ===== Slider de cursos misma categoría ===== */}
-      <CourseCarousel category={post.category} />
-
-      {/* ===== Consejos relacionados ===== */}
-      {related.length > 0 && (
-        <section className={styles.relatedWrap}>
-          <h2>También puede interesarte</h2>
-          <div className={styles.relatedRow} ref={allPostsContainerRef}>
-            {related.map((r) => (
-              <Link key={r.id} href={`/consejos/${r.slug}`} className={styles.card}>
-                <img src={safeUrl(r.main_photo)} alt={r.title} />
-                <span>{r.title}</span>
-              </Link>
-            ))}
-          </div>
-        </section>
+      {/* -------- Newsletter permanente -------- */}
+      {showNewsletter && (
+        <NewsletterInline
+          category={post.category}
+          giftMsg={post.gift_msg}
+          giftPdfUrl={post.gift_pdf_url}
+        />
       )}
 
-      
-      {/* ===== Popup compartir ===== */}
+      {/* -------- Carrusel de cursos -------- */}
+      <CourseCarousel category={post.category} />
+
+      {/* -------- Popup Newsletter -------- */}
+      {showNewsletter && (
+        <NewsletterPopup
+          category={post.category}
+          giftMsg={post.gift_msg}
+          giftPdfUrl={post.gift_pdf_url}
+        />
+      )}
+
+      {/* -------- Popup compartir -------- */}
       {shareOpen && (
         <div className={styles.shareOverlay} onClick={() => setShareOpen(false)}>
           <div className={styles.shareBox} onClick={(e) => e.stopPropagation()}>
@@ -220,7 +190,7 @@ export default function ConsejoDetailPage() {
                   `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
                     location.href
                   )}`,
-                  '_blank'
+                  "_blank"
                 )
               }
             >
@@ -230,7 +200,7 @@ export default function ConsejoDetailPage() {
               onClick={() =>
                 window.open(
                   `https://wa.me/?text=${encodeURIComponent(location.href)}`,
-                  '_blank'
+                  "_blank"
                 )
               }
             >

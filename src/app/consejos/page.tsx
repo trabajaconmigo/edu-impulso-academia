@@ -2,49 +2,54 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import styles from './ConsejosMain.module.css';
 
-/* ---------- local type for rows returned from the table ---------- */
-interface Post {
+/* ---------- Tipo local ---------- */
+interface PostData {
   id: string;
   title: string;
-  slug: string;
+  short_description: string;
   category: string;
   main_photo?: string;
-  short_description: string;
+  slug: string;
   created_at: string;
-  // …add other columns if you need them later
 }
 
 export default function ConsejosMainPage() {
-  const [groupedPosts, setGroupedPosts] = useState<Record<string, Post[]>>({});
+  const [postsByCategory, setPostsByCategory] = useState<Record<string, PostData[]>>({});
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
-  /* ---------------------------- fetch once --------------------------- */
+  /* ----------- fetch ----------- */
   useEffect(() => {
     (async () => {
-      const { data, error } = await supabase
-        .from('consejos')         // ✅ no generic here (v2)
-        .select('*')
-        .eq('published', true)
-        .order('created_at', { ascending: false });
+      try {
+        const { data, error } = await supabase
+          .from('consejos')
+          .select('*')
+          .eq('published', true)
+          .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching consejos:', error.message);
-      } else {
-        /* group by category */
-        const byCat: Record<string, Post[]> = {};
-        (data as Post[]).forEach((post) => {
-          (byCat[post.category || 'Sin categoría'] ??= []).push(post);
+        if (error) throw error;
+
+        const grouped: Record<string, PostData[]> = {};
+        (data ?? []).forEach((p) => {
+          const cat = (p as any).category || 'Sin categoría';
+          (grouped[cat] ??= []).push(p as PostData);
         });
-        setGroupedPosts(byCat);
+        setPostsByCategory(grouped);
+      } catch (err: any) {
+        console.error('Error fetching consejos:', err.message);
+        setError('Ocurrió un error al cargar los consejos.');
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     })();
   }, []);
 
-  /* ---------------------- date util (no date-fns needed) --------------------- */
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString('es-MX', {
       day: '2-digit',
@@ -52,64 +57,65 @@ export default function ConsejosMainPage() {
       year: 'numeric',
     });
 
-  /* ------------------------------ render ------------------------------ */
-  if (loading) return <p className={styles.loading}>Cargando…</p>;
-
   return (
     <div className={styles.pageWrapper}>
       <h1 className={styles.pageTitle}>Noticias y Consejos</h1>
 
-      {Object.entries(groupedPosts).map(([cat, posts]) => {
-        if (!posts.length) return null;
-        const [mainPost, ...others] = posts;
+      {loading ? (
+        <p className={styles.loading}>Cargando…</p>
+      ) : error ? (
+        <p className={styles.error}>{error}</p>
+      ) : (
+        Object.entries(postsByCategory).map(([cat, posts]) => {
+          const [mainPost, ...others] = posts;
+          return (
+            <section key={cat} className={styles.categorySection}>
+              <h2 className={styles.categoryTitle}>{cat}</h2>
 
-        return (
-          <section key={cat} className={styles.categorySection}>
-            <h2 className={styles.categoryTitle}>{cat}</h2>
+              <div className={styles.contentRow}>
+                {/* Post principal */}
+                <Link href={`/consejos/${mainPost.slug}`} className={styles.mainPost}>
+                  {mainPost.main_photo && (
+                    <img
+                      src={mainPost.main_photo}
+                      alt={mainPost.title}
+                      className={styles.mainImage}
+                    />
+                  )}
+                  <div className={styles.mainDetails}>
+                    <h3>{mainPost.title}</h3>
+                    <p>{mainPost.short_description}</p>
+                    <small>{formatDate(mainPost.created_at)}</small>
+                  </div>
+                </Link>
 
-            <div className={styles.contentRow}>
-              {/* ------------ main post ------------ */}
-              <Link
-                href={`/consejos/${mainPost.slug}`}
-                className={styles.mainPost}
-              >
-                {mainPost.main_photo && (
-                  <img
-                    src={mainPost.main_photo}
-                    alt={mainPost.title}
-                    className={styles.mainImage}
-                  />
-                )}
-                <div className={styles.mainDetails}>
-                  <h3>{mainPost.title}</h3>
-                  <p>{mainPost.short_description}</p>
-                  <small>{formatDate(mainPost.created_at)}</small>
-                </div>
-              </Link>
+                {/* Posts secundarios */}
+                <aside className={styles.sidebar}>
+                  {others.slice(0, 4).map((p) => (
+                    <Link key={p.id} href={`/consejos/${p.slug}`} className={styles.sidePost}>
+                      {p.main_photo && (
+                        <img
+                          src={p.main_photo}
+                          alt={p.title}
+                          className={styles.sideImage}
+                        />
+                      )}
+                      <span>{p.title}</span>
+                    </Link>
+                  ))}
+                </aside>
+              </div>
+            </section>
+          );
+        })
+      )}
 
-              {/* ------------ sidebar (max 4) ------------ */}
-              <aside className={styles.sidebar}>
-                {others.slice(0, 4).map((p) => (
-                  <Link
-                    key={p.id}
-                    href={`/consejos/${p.slug}`}
-                    className={styles.sidePost}
-                  >
-                    {p.main_photo && (
-                      <img
-                        src={p.main_photo}
-                        alt={p.title}
-                        className={styles.sideImage}
-                      />
-                    )}
-                    <span>{p.title}</span>
-                  </Link>
-                ))}
-              </aside>
-            </div>
-          </section>
-        );
-      })}
+      {/* Botón volver (opcional) */}
+      {!loading && !error && (
+        <button onClick={() => router.back()} className={styles.backButton}>
+          &larr; Volver
+        </button>
+      )}
     </div>
   );
 }

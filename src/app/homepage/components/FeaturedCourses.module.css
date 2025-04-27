@@ -1,121 +1,101 @@
-/* Container for the entire featured courses section */
+/* --------------------------------------------------------------------
+   src/app/homepage/components/FeaturedCourses.module.css
+-------------------------------------------------------------------- */
 .featuredContainer {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 2rem;
-  }
-  
-  .featuredContainer h2 {
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-  }
-  
-  /* Carousel container holds the row and arrow buttons */
-  .carouselContainer {
-    position: relative;
-    display: flex;
-    align-items: center;
-  }
-  
-  /* Horizontal scrollable row */
-  .coursesRow {
-    display: flex;
-    gap: 1rem;
-    overflow-x: auto;
-    scroll-behavior: smooth;
-    padding-bottom: 1rem;
-    flex: 1;
-  
-    /* Hide scrollbar if desired (Webkit only) */
-    -webkit-overflow-scrolling: touch;
-  }
-  
-  /* Each course card has a fixed height so they're uniform */
-  .courseCard {
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    width: 100%;
-    min-width: 250px; /* fallback for smaller screens */
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    flex: 0 0 calc(25% - 1rem); /* 4 cards per row on desktop */
-    max-height: 350px; /* fixed height for uniformity */
-    position: relative;
-    overflow: hidden;
-    padding: 1rem;
-  }
-  
-  .courseCard:hover {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
-  
-  /* Wrapper for the image */
-  .imageWrapper {
-    width: 100%;
-    height: 150px; /* fixed height for uniform image display */
-    overflow: hidden;
-    border-radius: 4px;
-    margin-bottom: 0.5rem;
-  }
-  
-  .courseImage {
-    width: 100%;
-    height: 100%;
-    object-fit: cover; /* ensures a uniform image area */
-    display: block;
-  }
-  
-  /* Title styling, optionally clamp to 1-2 lines if needed */
-  .courseTitle {
-    font-size: 1.2rem;
-    margin: 0.5rem 0;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-  
-  /* Description with multi-line clamp */
-  .courseDesc {
-    color: #666;
-    font-size: 0.9rem;
-    margin: 0.5rem 0;
-    /* Multi-line ellipsis */
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-line-clamp: 3; /* show 3 lines max */
-    -webkit-box-orient: vertical;
-  }
-  
-  /* Arrow buttons - shown only on desktop */
-  .arrowButton {
-    background: rgba(0, 0, 0, 0.5);
-    color: #fff;
-    border: none;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    cursor: pointer;
-    z-index: 2;
-    display: none; /* Hide by default; show on desktop via media query */
-  }
-  
-  /* Show arrow buttons on desktop */
-  @media (min-width: 768px) {
-    .arrowButton {
-      display: block;
-    }
-  }
-  
-  /* Mobile: show one course per view */
-  @media (max-width: 767px) {
-    .courseCard {
-      flex: 0 0 100%;
-      max-height: 400px; /* Slightly taller for 1 card per row on mobile */
-    }
-  }
-  
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.sectionTitle {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  font-weight: bold;
+}
+
+/* contenedor carrusel */
+.carouselContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* fila horizontal */
+.coursesRow {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  padding-bottom: 1rem;
+  flex: 1;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* tarjeta de curso */
+.courseCard {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  min-width: 250px;
+  max-width: 300px;
+  flex: 0 0 calc(25% - 1rem); /* 4 por fila en desktop */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+  padding: 1rem;
+}
+.courseCard:hover { box-shadow: 0 2px 8px rgba(0,0,0,.1); }
+
+/* imagen */
+.imageWrapper {
+  width: 100%;
+  height: 150px;
+  overflow: hidden;
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+}
+.courseImage { width: 100%; height: 100%; object-fit: cover; }
+
+/* título y descripción */
+.courseTitle {
+  font-size: 1.2rem;
+  margin: 0.5rem 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.courseDesc {
+  color: #666;
+  font-size: 0.9rem;
+  margin: 0.5rem 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+/* flechas (solo desktop, fondo transparente) */
+.arrowButton {
+  background: transparent;
+  color: rgb(63, 63, 63);
+  border: none;
+  width: 40px;
+  height: 40px;
+  font-size: 2rem;
+  cursor: pointer;
+  display: none;          /* se activa en @media + showArrows */
+}
+@media (min-width: 768px) {
+  .arrowButton { display: block; }
+  .arrowLeft  { margin-right: 0.75rem; }
+  .arrowRight { margin-left: 0.75rem; }
+}
+
+/* mobile: 1 tarjeta por vista */
+@media (max-width: 767px) {
+  .courseCard { flex: 0 0 100%; max-height: 400px; }
+}

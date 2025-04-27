@@ -4,6 +4,7 @@
   display: flex;
   flex-direction: column;
   gap: 2rem;
+  
 }
 
 .hero {
@@ -23,7 +24,7 @@
 }
 
 .exploreBtn {
-  background-color: #a435f0; 
+  background-color: #7c2bb2; 
   color: #fff;
   border: none;
   padding: 0.8rem 1.5rem;

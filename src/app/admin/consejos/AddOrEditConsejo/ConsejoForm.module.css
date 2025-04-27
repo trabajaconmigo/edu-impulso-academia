@@ -1,0 +1,82 @@
+/* --------------------------------------------------------------------
+   src/app/admin/consejos/AddOrEditConsejo/ConsejoForm.module.css
+-------------------------------------------------------------------- */
+
+.formMain {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.form {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+/* ===== columna izquierda / derecha ===== */
+.col {
+  flex: 1 1 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+/* ===== elementos dentro de .col ===== */
+.col label {
+  font-weight: 600;
+}
+
+.col input,
+.col textarea,
+.col select {
+  width: 100%;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.95rem;
+}
+
+.col textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* ===== botón guardar ===== */
+.saveBtn {
+  background: #7c2bb2;
+  color: #fff;
+  border: none;
+  padding: 0.8rem 2rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  margin: 1.5rem auto 0;
+  display: block;
+  transition: background 0.25s;
+}
+
+.saveBtn[disabled] {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.saveBtn:hover:enabled {
+  background: #68249a;
+}
+.preview {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  margin: 0.5rem 0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.fileLink {
+  font-size: 0.85rem;
+  color: #7c2bb2;
+  display: inline-block;
+  margin-top: 0.3rem;
+}
+.fileLink:hover { text-decoration: underline; }

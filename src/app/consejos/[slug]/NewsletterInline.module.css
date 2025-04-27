@@ -1,0 +1,42 @@
+.banner {
+    background: #ffffff;
+    border: 1px solid #f4f4f4;
+    border-radius: 6px;
+    padding: 1.5rem;
+    max-width: 1000px;
+    margin: 3rem auto;
+    text-align: center;
+  }
+  
+  .hook {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+    color: #1c1d1f;
+  }
+  
+  .form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+  .form input {
+    padding: 0.6rem 0.8rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  .form button {
+    background: #7c2bb2;
+    color: #fff;
+    border: none;
+    padding: 0.65rem 1rem;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.25s;
+  }
+  .form button:hover { background: #68249a; }
+  
+  .thanks { font-size: 1rem; color: #333; }
+  

@@ -13,7 +13,7 @@
   --font-mono: var(--font-geist-mono);
   --purple:        #6f42c1;  /* brand purple */
       --purple-dark:   #5833a0;
-      --green:         #28a745;
+      --green:         #2e9c48;
 }
 
 /* Dark mode override (if needed) */
@@ -56,3 +56,4 @@ a {
   color: inherit;
   text-decoration: none;
 }
+

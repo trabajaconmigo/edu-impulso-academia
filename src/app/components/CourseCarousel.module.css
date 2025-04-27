@@ -12,17 +12,16 @@
   margin-bottom: 1rem;
   font-weight: bold;
 }
-.sectionTitle span {
-  color: purple;
-}
+.sectionTitle span { color: purple; }
 
-/* --- Estructura del carrusel --- */
+/* --- contenedor carrusel --- */
 .carouselContainer {
   position: relative;
   display: flex;
   align-items: center;
 }
 
+/* --- fila scroll --- */
 .coursesRow {
   display: flex;
   gap: 1rem;
@@ -33,14 +32,14 @@
   -webkit-overflow-scrolling: touch;
 }
 
-/* --- Tarjeta de curso --- */
+/* --- tarjeta de curso --- */
 .courseCard {
   background: #fff;
   border: 1px solid #ddd;
   border-radius: 6px;
   min-width: 250px;
   max-width: 300px;
-  flex: 0 0 calc(25% - 1rem); /* 4 por fila en desktop */
+  flex: 0 0 calc(25% - 1rem); /* 4 en desktop */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -49,9 +48,7 @@
   transition: box-shadow 0.2s;
   padding: 1rem;
 }
-.courseCard:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
+.courseCard:hover { box-shadow: 0 2px 8px rgba(0,0,0,.1); }
 
 .imageWrapper {
   width: 100%;
@@ -60,11 +57,7 @@
   border-radius: 4px;
   margin-bottom: 0.5rem;
 }
-.courseImage {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
+.courseImage { width: 100%; height: 100%; object-fit: cover; }
 
 .courseTitle {
   font-size: 1.1rem;
@@ -82,26 +75,24 @@
   display: -webkit-box;
 }
 
-/* --- Flechas (solo desktop) --- */
+/* --- flechas (solo desktop) --- */
 .arrowButton {
-  background: rgba(0, 0, 0, 0.55);
-  color: #fff;
+  background: transparent;       /* fondo transparente */
+  color: rgb(63, 63, 63);                 /* icono morado */
   border: none;
   width: 40px;
   height: 40px;
-  border-radius: 50%;
+  font-size: 2rem;
   cursor: pointer;
-  display: none; /* por defecto oculto */
+  display: none;                 /* se mostrará vía media query + lógica showArrows */
 }
 @media (min-width: 768px) {
-  .arrowButton {
-    display: block;
-  }
+  .arrowButton { display: block; }
+  .arrowLeft  { margin-right: 0.75rem; }
+  .arrowRight { margin-left: 0.75rem; }
 }
 
-/* --- Ajustes mobile --- */
+/* --- ajustes mobile --- */
 @media (max-width: 767px) {
-  .courseCard {
-    flex: 0 0 80%; /* 1-1.2 tarjetas visibles */
-  }
+  .courseCard { flex: 0 0 80%; }
 }

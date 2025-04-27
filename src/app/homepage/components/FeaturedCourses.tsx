@@ -1,4 +1,3 @@
-// src/app/homepage/components/FeaturedCourses.tsx
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -18,28 +17,26 @@ export default function FeaturedCourses() {
   const [courses, setCourses] = useState<Course[]>([]);
   const rowRef = useRef<HTMLDivElement>(null);
 
+  /* ---------- fetch ---------- */
   useEffect(() => {
-    async function fetchCourses() {
+    (async () => {
       const { data, error } = await supabase
         .from("courses")
-        .select("id, title, description, thumbnail_url, slug");
-      if (error) {
-        console.error("Error fetching courses:", error.message);
-      } else if (data) {
-        setCourses(data as Course[]);
-      }
-    }
-    fetchCourses();
+        .select("id,title,description,thumbnail_url,slug")
+        .order("created_at", { ascending: false })
+        .limit(12);                       // obtén hasta 12 destacados
+
+      if (!error && data) setCourses(data as Course[]);
+      else console.error("Error fetching courses:", error?.message);
+    })();
   }, []);
 
-  // Scroll one card width
   const scrollLeft = () => {
     if (rowRef.current) {
-      const cardWidth = rowRef.current.clientWidth / 4; // 4 cards on desktop
+      const cardWidth = rowRef.current.clientWidth / 4;
       rowRef.current.scrollBy({ left: -cardWidth, behavior: "smooth" });
     }
   };
-
   const scrollRight = () => {
     if (rowRef.current) {
       const cardWidth = rowRef.current.clientWidth / 4;
@@ -47,34 +44,51 @@ export default function FeaturedCourses() {
     }
   };
 
+  if (!courses.length) return null;
+  const showArrows = courses.length > 4;   // 🔑 flechas solo si hay >4
+
   return (
     <section className={styles.featuredContainer}>
-      <h2>Cursos Destacados</h2>
+      <h2 className={styles.sectionTitle}>Cursos Destacados</h2>
+
       <div className={styles.carouselContainer}>
-        {/* Arrow button: visible on desktop */}
-        <button className={styles.arrowButton} onClick={scrollLeft}>
-          &#8249;
-        </button>
+        {showArrows && (
+          <button
+            className={`${styles.arrowButton} ${styles.arrowLeft}`}
+            onClick={scrollLeft}
+            aria-label="Anterior"
+          >
+            &#8249;
+          </button>
+        )}
+
         <div className={styles.coursesRow} ref={rowRef}>
-          {courses.map((course) => (
-            <Link href={`/cursos/${course.slug}`} key={course.id}>
+          {courses.map((c) => (
+            <Link href={`/cursos/${c.slug}`} key={c.id}>
               <div className={styles.courseCard}>
                 <div className={styles.imageWrapper}>
                   <img
-                    src={course.thumbnail_url}
-                    alt={course.title}
+                    src={c.thumbnail_url}
+                    alt={c.title}
                     className={styles.courseImage}
                   />
                 </div>
-                <h3 className={styles.courseTitle}>{course.title}</h3>
-                <p className={styles.courseDesc}>{course.description}</p>
+                <h3 className={styles.courseTitle}>{c.title}</h3>
+                <p className={styles.courseDesc}>{c.description}</p>
               </div>
             </Link>
           ))}
         </div>
-        <button className={styles.arrowButton} onClick={scrollRight}>
-          &#8250;
-        </button>
+
+        {showArrows && (
+          <button
+            className={`${styles.arrowButton} ${styles.arrowRight}`}
+            onClick={scrollRight}
+            aria-label="Siguiente"
+          >
+            &#8250;
+          </button>
+        )}
       </div>
     </section>
   );

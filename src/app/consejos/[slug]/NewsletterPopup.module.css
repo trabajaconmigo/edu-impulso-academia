@@ -1,0 +1,62 @@
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+  }
+  
+  .popup {
+    background: #f9f9f9;          /* gris claro */
+    width: 90%;
+    max-width: 600px;             /* límite solicitado */
+    border-radius: 8px;
+    padding: 2rem 1.5rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    position: relative;
+    text-align: center;
+  }
+  
+  .closeBtn {
+    position: absolute;
+    top: 0.35rem;
+    right: 0.7rem;
+    background: none;
+    border: none;
+    font-size: 1.8rem;
+    cursor: pointer;
+    color: #888;
+  }
+  .closeBtn:hover { color: #555; }
+  
+  .title     { font-size: 1.4rem; margin-bottom: 0.5rem; color: #1c1d1f; }
+  .subtitle  { font-size: 1rem;  color: #555;       margin-bottom: 1.1rem; }
+  
+  .form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+  }
+  .form input {
+    padding: 0.6rem 0.8rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+  }
+  .form button {
+    background: #7c2bb2;
+    color: #fff;
+    border: none;
+    padding: 0.7rem 1rem;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.25s;
+  }
+  .form button:hover { background: #68249a; }
+  
+  .thanksTitle { font-size: 1.5rem; margin-bottom: 0.5rem; }
+  .thanksText  { font-size: 1rem;  color: #444; }
+  
