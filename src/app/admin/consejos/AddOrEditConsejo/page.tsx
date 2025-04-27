@@ -1,8 +1,9 @@
-/* --------------------------------------------------------------------
-   src/app/admin/consejos/AddOrEditConsejo/page.tsx
-   Formulario “Crear / Editar Consejo”    (Next 15 – App Router)
--------------------------------------------------------------------- */
-export const dynamic = "force-dynamic";   // ← evita el prerender en build
+/* eslint-disable no-undef */
+// --------------------------------------------------------------------
+// src/app/admin/consejos/AddOrEditConsejo/page.tsx
+// Formulario Crear/Editar Consejo con subida de imágenes y PDF
+// --------------------------------------------------------------------
+export const dynamic = "force-dynamic";
 
 "use client";
 
@@ -12,13 +13,12 @@ import { supabase } from "@/lib/supabaseClient";
 import { nanoid } from "nanoid";
 import styles from "./ConsejoForm.module.css";
 
-/* ---------- Tipo de dato local ---------- */
 interface ConsejoFormData {
   title: string;
   slug: string;
   short_description: string;
   category: string;
-  hashtags: string;   // coma-separado
+  hashtags: string;
   main_photo: string;
   photo2: string;
   content: string;
@@ -43,12 +43,11 @@ const empty: ConsejoFormData = {
 export default function AddOrEditConsejo() {
   const router = useRouter();
   const params = useSearchParams();
-  const id = params.get("id");                 // null ⇒ crear / uuid ⇒ editar
+  const id = params.get("id");
 
   const [data, setData] = useState<ConsejoFormData>(empty);
   const [loading, setLoading] = useState(false);
 
-  /* --------- Cargar datos si ?id --------- */
   useEffect(() => {
     if (!id) return;
     (async () => {
@@ -68,51 +67,45 @@ export default function AddOrEditConsejo() {
     })();
   }, [id]);
 
-  /* --------- Helpers de estado --------- */
-  const set = (k: keyof ConsejoFormData, v: any) =>
-    setData((d) => ({ ...d, [k]: v }));
+  const setField = (key: keyof ConsejoFormData, val: any) =>
+    setData((d) => ({ ...d, [key]: val }));
 
-  /* ==============================================================
-     SUBIDA de archivos (Bucket imágenes = consejos-images)
-  ============================================================== */
-  async function uploadImage(e: ChangeEvent<HTMLInputElement>, field: "main_photo" | "photo2") {
+  async function uploadImage(
+    e: ChangeEvent<HTMLInputElement>,
+    field: "main_photo" | "photo2"
+  ) {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    // 1) Redimensionar a ≤ 800 px (lado mayor) y comprimir
     const bitmap = await loadBitmap(file);
     const blob = await resizeToBlob(bitmap, 800);
-    const fileName = `${nanoid()}-${file.name.replace(/\\s+/g, "_")}.jpg`;
+    const fileName = `${nanoid()}-${file.name.replace(/\s+/g, "_")}.jpg`;
 
-    // 2) Subir a Storage
     const { error } = await supabase
       .storage
-      .from("consejos-images")           // <-- bucket existente
+      .from("consejos-images")
       .upload(fileName, blob, { contentType: "image/jpeg" });
-
     if (error) return alert(error.message);
-
-    // 3) Obtener URL pública y guardarla en el formulario
-    const { data: url } = supabase.storage.from("consejos-images").getPublicUrl(fileName);
-    set(field, url.publicUrl);
+    const { data: urlData } = supabase.storage
+      .from("consejos-images")
+      .getPublicUrl(fileName);
+    setField(field, urlData.publicUrl);
   }
 
   async function uploadPDF(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    const fileName = `${nanoid()}-${file.name.replace(/\\s+/g, "_")}`;
-
+    const fileName = `${nanoid()}-${file.name.replace(/\s+/g, "_")}`;
     const { error } = await supabase
       .storage
       .from("consejos-pdf")
       .upload(fileName, file, { contentType: "application/pdf" });
     if (error) return alert(error.message);
-
-    const { data: url } = supabase.storage.from("consejos-pdf").getPublicUrl(fileName);
-    set("gift_pdf_url", url.publicUrl);
+    const { data: urlData } = supabase.storage
+      .from("consejos-pdf")
+      .getPublicUrl(fileName);
+    setField("gift_pdf_url", urlData.publicUrl);
   }
 
-  /* ---------- Utilidades en navegador ---------- */
   function loadBitmap(file: File): Promise<ImageBitmap> {
     return new Promise((res, rej) => {
       const fr = new FileReader();
@@ -125,6 +118,7 @@ export default function AddOrEditConsejo() {
       fr.readAsDataURL(file);
     });
   }
+
   function resizeToBlob(img: ImageBitmap, max: number): Promise<Blob> {
     const scale = Math.min(1, max / Math.max(img.width, img.height));
     const w = Math.round(img.width * scale);
@@ -132,18 +126,23 @@ export default function AddOrEditConsejo() {
     const canvas = document.createElement("canvas");
     canvas.width = w;
     canvas.height = h;
-    canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
-    return new Promise((res) => canvas.toBlob((b) => res(b!), "image/jpeg", 0.8));
+    const ctx = canvas.getContext("2d")!;
+    ctx.drawImage(img, 0, 0, w, h);
+    return new Promise((resolve) =>
+      canvas.toBlob((b) => resolve(b!), "image/jpeg", 0.8)
+    );
   }
 
-  /* ---------- Guardar ---------- */
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
 
     const payload = {
       ...data,
-      hashtags: data.hashtags.split(",").map((h) => h.trim()).filter(Boolean),
+      hashtags: data.hashtags
+        .split(",")
+        .map((h) => h.trim())
+        .filter(Boolean),
     };
 
     let error;
@@ -158,70 +157,107 @@ export default function AddOrEditConsejo() {
     else router.push("/admin/consejos");
   }
 
-  /* ---------- Render ---------- */
   return (
     <main className={styles.formMain}>
       <h1>{id ? "Editar Consejo" : "Nuevo Consejo"}</h1>
 
       <form className={styles.form} onSubmit={handleSubmit}>
-        {/* Columna izquierda */}
+        {/* Izquierda */}
         <div className={styles.col}>
           <label>Título</label>
-          <input value={data.title} onChange={(e) => set("title", e.target.value)} required />
+          <input
+            value={data.title}
+            onChange={(e) => setField("title", e.target.value)}
+            required
+          />
 
           <label>Slug</label>
-          <input value={data.slug} onChange={(e) => set("slug", e.target.value)} required />
+          <input
+            value={data.slug}
+            onChange={(e) => setField("slug", e.target.value)}
+            required
+          />
 
           <label>Descripción corta</label>
           <textarea
             rows={3}
             value={data.short_description}
-            onChange={(e) => set("short_description", e.target.value)}
+            onChange={(e) => setField("short_description", e.target.value)}
             required
           />
 
           <label>Categoría</label>
-          <input value={data.category} onChange={(e) => set("category", e.target.value)} />
+          <input
+            value={data.category}
+            onChange={(e) => setField("category", e.target.value)}
+          />
 
-          <label>Hashtags (coma)</label>
-          <input value={data.hashtags} onChange={(e) => set("hashtags", e.target.value)} />
+          <label>Hashtags (coma separados)</label>
+          <input
+            value={data.hashtags}
+            onChange={(e) => setField("hashtags", e.target.value)}
+          />
 
           <label>
             Publicado&nbsp;
             <input
               type="checkbox"
               checked={data.published}
-              onChange={(e) => set("published", e.target.checked)}
+              onChange={(e) => setField("published", e.target.checked)}
             />
           </label>
 
-          <label>Mensaje regalo</label>
-          <input value={data.gift_msg} onChange={(e) => set("gift_msg", e.target.value)} />
+          <label>Mensaje Regalo</label>
+          <input
+            value={data.gift_msg}
+            onChange={(e) => setField("gift_msg", e.target.value)}
+          />
 
-          <label>PDF regalo</label>
+          <label>PDF Regalo</label>
           <input type="file" accept="application/pdf" onChange={uploadPDF} />
           {data.gift_pdf_url && (
-            <a href={data.gift_pdf_url} target="_blank" className={styles.fileLink}>
+            <a
+              href={data.gift_pdf_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.fileLink}
+            >
               Ver PDF
             </a>
           )}
         </div>
 
-        {/* Columna derecha */}
+        {/* Derecha */}
         <div className={styles.col}>
-          <label>Imagen principal</label>
-          <input type="file" accept="image/*" onChange={(e) => uploadImage(e, "main_photo")} />
-          {data.main_photo && <img src={data.main_photo} className={styles.preview} />}
+          <label>Imagen Principal</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => uploadImage(e, "main_photo")}
+          />
+          {data.main_photo && (
+            <img
+              src={data.main_photo}
+              alt="preview"
+              className={styles.preview}
+            />
+          )}
 
-          <label>Imagen secundaria</label>
-          <input type="file" accept="image/*" onChange={(e) => uploadImage(e, "photo2")} />
-          {data.photo2 && <img src={data.photo2} className={styles.preview} />}
+          <label>Imagen Secundaria</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => uploadImage(e, "photo2")}
+          />
+          {data.photo2 && (
+            <img src={data.photo2} alt="preview" className={styles.preview} />
+          )}
 
           <label>Contenido (HTML)</label>
           <textarea
             rows={18}
             value={data.content}
-            onChange={(e) => set("content", e.target.value)}
+            onChange={(e) => setField("content", e.target.value)}
           />
         </div>
 
