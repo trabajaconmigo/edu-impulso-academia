@@ -1,11 +1,10 @@
-/* eslint-disable no-undef */
 // --------------------------------------------------------------------
 // src/app/admin/consejos/AddOrEditConsejo/page.tsx
 // Formulario Crear/Editar Consejo con subida de imágenes y PDF
 // --------------------------------------------------------------------
-export const dynamic = "force-dynamic";
 
 "use client";
+export const dynamic = "force-dynamic";
 
 import { useEffect, useState, ChangeEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -26,6 +25,7 @@ interface ConsejoFormData {
   gift_msg: string;
   gift_pdf_url: string;
 }
+
 const empty: ConsejoFormData = {
   title: "",
   slug: "",
@@ -76,6 +76,7 @@ export default function AddOrEditConsejo() {
   ) {
     const file = e.target.files?.[0];
     if (!file) return;
+
     const bitmap = await loadBitmap(file);
     const blob = await resizeToBlob(bitmap, 800);
     const fileName = `${nanoid()}-${file.name.replace(/\s+/g, "_")}.jpg`;
@@ -85,7 +86,9 @@ export default function AddOrEditConsejo() {
       .from("consejos-images")
       .upload(fileName, blob, { contentType: "image/jpeg" });
     if (error) return alert(error.message);
-    const { data: urlData } = supabase.storage
+
+    const { data: urlData } = supabase
+      .storage
       .from("consejos-images")
       .getPublicUrl(fileName);
     setField(field, urlData.publicUrl);
@@ -94,13 +97,16 @@ export default function AddOrEditConsejo() {
   async function uploadPDF(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+
     const fileName = `${nanoid()}-${file.name.replace(/\s+/g, "_")}`;
     const { error } = await supabase
       .storage
       .from("consejos-pdf")
       .upload(fileName, file, { contentType: "application/pdf" });
     if (error) return alert(error.message);
-    const { data: urlData } = supabase.storage
+
+    const { data: urlData } = supabase
+      .storage
       .from("consejos-pdf")
       .getPublicUrl(fileName);
     setField("gift_pdf_url", urlData.publicUrl);
@@ -162,7 +168,6 @@ export default function AddOrEditConsejo() {
       <h1>{id ? "Editar Consejo" : "Nuevo Consejo"}</h1>
 
       <form className={styles.form} onSubmit={handleSubmit}>
-        {/* Izquierda */}
         <div className={styles.col}>
           <label>Título</label>
           <input
@@ -199,7 +204,7 @@ export default function AddOrEditConsejo() {
           />
 
           <label>
-            Publicado&nbsp;
+            Publicado{" "}
             <input
               type="checkbox"
               checked={data.published}
@@ -227,7 +232,6 @@ export default function AddOrEditConsejo() {
           )}
         </div>
 
-        {/* Derecha */}
         <div className={styles.col}>
           <label>Imagen Principal</label>
           <input
