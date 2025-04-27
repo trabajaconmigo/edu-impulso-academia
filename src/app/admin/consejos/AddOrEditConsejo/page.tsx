@@ -3,11 +3,11 @@
 // Formulario Crear/Editar Consejo con subida de imágenes y PDF
 // --------------------------------------------------------------------
 
-// ❗️ Debe ir en esta orden para Next 15 App Router:
+// 1) Siempre debe ir en esta orden:
 "use client";
 export const dynamic = "force-dynamic";
 
-import { useEffect, useState, ChangeEvent } from "react";
+import React, { Suspense, useEffect, useState, ChangeEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { nanoid } from "nanoid";
@@ -40,7 +40,7 @@ const empty: ConsejoFormData = {
   gift_pdf_url: "",
 };
 
-export default function AddOrEditConsejo() {
+function AdminConsejoForm() {
   const router = useRouter();
   const params = useSearchParams();
   const id = params.get("id");
@@ -84,7 +84,10 @@ export default function AddOrEditConsejo() {
       .storage
       .from("consejos-images")
       .upload(fileName, blob, { contentType: "image/jpeg" });
-    if (error) return alert(error.message);
+    if (error) {
+      alert(error.message);
+      return;
+    }
 
     const { data: urlData } = supabase
       .storage
@@ -97,11 +100,15 @@ export default function AddOrEditConsejo() {
     const file = e.target.files?.[0];
     if (!file) return;
     const fileName = `${nanoid()}-${file.name.replace(/\s+/g, "_")}`;
+
     const { error } = await supabase
       .storage
       .from("consejos-pdf")
       .upload(fileName, file, { contentType: "application/pdf" });
-    if (error) return alert(error.message);
+    if (error) {
+      alert(error.message);
+      return;
+    }
 
     const { data: urlData } = supabase
       .storage
@@ -115,7 +122,8 @@ export default function AddOrEditConsejo() {
       const fr = new FileReader();
       fr.onload = () => {
         const img = new Image();
-        img.onload = () => createImageBitmap(img).then(res).catch(rej);
+        img.onload = () =>
+          createImageBitmap(img).then(res).catch(rej);
         img.src = fr.result as string;
       };
       fr.onerror = rej;
@@ -130,8 +138,7 @@ export default function AddOrEditConsejo() {
     const canvas = document.createElement("canvas");
     canvas.width = w;
     canvas.height = h;
-    const ctx = canvas.getContext("2d")!;
-    ctx.drawImage(img, 0, 0, w, h);
+    canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
     return new Promise((resolve) =>
       canvas.toBlob((b) => resolve(b!), "image/jpeg", 0.8)
     );
@@ -151,7 +158,10 @@ export default function AddOrEditConsejo() {
 
     let error;
     if (id) {
-      ({ error } = await supabase.from("consejos").update(payload).eq("id", id));
+      ({ error } = await supabase
+        .from("consejos")
+        .update(payload)
+        .eq("id", id));
     } else {
       ({ error } = await supabase.from("consejos").insert([payload]));
     }
@@ -164,7 +174,6 @@ export default function AddOrEditConsejo() {
   return (
     <main className={styles.formMain}>
       <h1>{id ? "Editar Consejo" : "Nuevo Consejo"}</h1>
-
       <form className={styles.form} onSubmit={handleSubmit}>
         {/* Columna izquierda */}
         <div className={styles.col}>
@@ -274,5 +283,13 @@ export default function AddOrEditConsejo() {
         </button>
       </form>
     </main>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<p style={{ textAlign: "center" }}>Cargando formulario…</p>}>
+      <AdminConsejoForm />
+    </Suspense>
   );
 }
