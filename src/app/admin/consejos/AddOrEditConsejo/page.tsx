@@ -3,9 +3,9 @@
 // Formulario Crear/Editar Consejo con subida de imágenes y PDF
 // --------------------------------------------------------------------
 
+// ❗️ Debe ir en esta orden para Next 15 App Router:
 "use client";
-export const prerender = false;       // ← desactiva prerender estático
-export const dynamic = "force-dynamic"; // ← fuerza render dinámico
+export const dynamic = "force-dynamic";
 
 import { useEffect, useState, ChangeEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -164,7 +164,9 @@ export default function AddOrEditConsejo() {
   return (
     <main className={styles.formMain}>
       <h1>{id ? "Editar Consejo" : "Nuevo Consejo"}</h1>
+
       <form className={styles.form} onSubmit={handleSubmit}>
+        {/* Columna izquierda */}
         <div className={styles.col}>
           <label>Título</label>
           <input
@@ -228,6 +230,8 @@ export default function AddOrEditConsejo() {
             </a>
           )}
         </div>
+
+        {/* Columna derecha */}
         <div className={styles.col}>
           <label>Imagen Principal</label>
           <input
@@ -242,6 +246,7 @@ export default function AddOrEditConsejo() {
               className={styles.preview}
             />
           )}
+
           <label>Imagen Secundaria</label>
           <input
             type="file"
@@ -249,8 +254,13 @@ export default function AddOrEditConsejo() {
             onChange={(e) => uploadImage(e, "photo2")}
           />
           {data.photo2 && (
-            <img src={data.photo2} alt="preview" className={styles.preview} />
+            <img
+              src={data.photo2}
+              alt="preview"
+              className={styles.preview}
+            />
           )}
+
           <label>Contenido (HTML)</label>
           <textarea
             rows={18}
@@ -258,6 +268,7 @@ export default function AddOrEditConsejo() {
             onChange={(e) => setField("content", e.target.value)}
           />
         </div>
+
         <button className={styles.saveBtn} disabled={loading}>
           {loading ? "Guardando…" : "Guardar"}
         </button>
