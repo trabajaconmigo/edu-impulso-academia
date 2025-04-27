@@ -4,7 +4,8 @@
 // --------------------------------------------------------------------
 
 "use client";
-export const dynamic = "force-dynamic";
+export const prerender = false;       // ← desactiva prerender estático
+export const dynamic = "force-dynamic"; // ← fuerza render dinámico
 
 import { useEffect, useState, ChangeEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -25,7 +26,6 @@ interface ConsejoFormData {
   gift_msg: string;
   gift_pdf_url: string;
 }
-
 const empty: ConsejoFormData = {
   title: "",
   slug: "",
@@ -76,7 +76,6 @@ export default function AddOrEditConsejo() {
   ) {
     const file = e.target.files?.[0];
     if (!file) return;
-
     const bitmap = await loadBitmap(file);
     const blob = await resizeToBlob(bitmap, 800);
     const fileName = `${nanoid()}-${file.name.replace(/\s+/g, "_")}.jpg`;
@@ -97,7 +96,6 @@ export default function AddOrEditConsejo() {
   async function uploadPDF(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-
     const fileName = `${nanoid()}-${file.name.replace(/\s+/g, "_")}`;
     const { error } = await supabase
       .storage
@@ -166,7 +164,6 @@ export default function AddOrEditConsejo() {
   return (
     <main className={styles.formMain}>
       <h1>{id ? "Editar Consejo" : "Nuevo Consejo"}</h1>
-
       <form className={styles.form} onSubmit={handleSubmit}>
         <div className={styles.col}>
           <label>Título</label>
@@ -231,7 +228,6 @@ export default function AddOrEditConsejo() {
             </a>
           )}
         </div>
-
         <div className={styles.col}>
           <label>Imagen Principal</label>
           <input
@@ -246,7 +242,6 @@ export default function AddOrEditConsejo() {
               className={styles.preview}
             />
           )}
-
           <label>Imagen Secundaria</label>
           <input
             type="file"
@@ -256,7 +251,6 @@ export default function AddOrEditConsejo() {
           {data.photo2 && (
             <img src={data.photo2} alt="preview" className={styles.preview} />
           )}
-
           <label>Contenido (HTML)</label>
           <textarea
             rows={18}
@@ -264,7 +258,6 @@ export default function AddOrEditConsejo() {
             onChange={(e) => setField("content", e.target.value)}
           />
         </div>
-
         <button className={styles.saveBtn} disabled={loading}>
           {loading ? "Guardando…" : "Guardar"}
         </button>
