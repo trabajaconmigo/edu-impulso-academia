@@ -1,7 +1,9 @@
 /* --------------------------------------------------------------------
    src/app/admin/consejos/AddOrEditConsejo/page.tsx
-   (usa bucket 'consejos-images' para fotos)
+   Formulario “Crear / Editar Consejo”    (Next 15 – App Router)
 -------------------------------------------------------------------- */
+export const dynamic = "force-dynamic";   // ← evita el prerender en build
+
 "use client";
 
 import { useEffect, useState, ChangeEvent } from "react";
@@ -10,12 +12,13 @@ import { supabase } from "@/lib/supabaseClient";
 import { nanoid } from "nanoid";
 import styles from "./ConsejoForm.module.css";
 
+/* ---------- Tipo de dato local ---------- */
 interface ConsejoFormData {
   title: string;
   slug: string;
   short_description: string;
   category: string;
-  hashtags: string;
+  hashtags: string;   // coma-separado
   main_photo: string;
   photo2: string;
   content: string;
@@ -40,17 +43,23 @@ const empty: ConsejoFormData = {
 export default function AddOrEditConsejo() {
   const router = useRouter();
   const params = useSearchParams();
-  const id = params.get("id");
+  const id = params.get("id");                 // null ⇒ crear / uuid ⇒ editar
 
   const [data, setData] = useState<ConsejoFormData>(empty);
   const [loading, setLoading] = useState(false);
 
-  /* -------- fetch si edición -------- */
+  /* --------- Cargar datos si ?id --------- */
   useEffect(() => {
     if (!id) return;
     (async () => {
-      const { data: c } = await supabase.from("consejos").select("*").eq("id", id).single();
-      if (c) {
+      const { data: c, error } = await supabase
+        .from("consejos")
+        .select("*")
+        .eq("id", id)
+        .single();
+      if (error) {
+        alert(error.message);
+      } else if (c) {
         setData({
           ...c,
           hashtags: (c.hashtags || []).join(", "),
@@ -59,25 +68,33 @@ export default function AddOrEditConsejo() {
     })();
   }, [id]);
 
-  const set = (k: keyof ConsejoFormData, v: any) => setData((d) => ({ ...d, [k]: v }));
+  /* --------- Helpers de estado --------- */
+  const set = (k: keyof ConsejoFormData, v: any) =>
+    setData((d) => ({ ...d, [k]: v }));
 
-  /* =================== UPLOAD =================== */
+  /* ==============================================================
+     SUBIDA de archivos (Bucket imágenes = consejos-images)
+  ============================================================== */
   async function uploadImage(e: ChangeEvent<HTMLInputElement>, field: "main_photo" | "photo2") {
     const file = e.target.files?.[0];
     if (!file) return;
-    const img = await loadImageBitmap(file);
-    const blob = await resizeToBlob(img, 800);
+
+    // 1) Redimensionar a ≤ 800 px (lado mayor) y comprimir
+    const bitmap = await loadBitmap(file);
+    const blob = await resizeToBlob(bitmap, 800);
     const fileName = `${nanoid()}-${file.name.replace(/\\s+/g, "_")}.jpg`;
 
+    // 2) Subir a Storage
     const { error } = await supabase
       .storage
-      .from("consejos-images")        // ← bucket corregido
+      .from("consejos-images")           // <-- bucket existente
       .upload(fileName, blob, { contentType: "image/jpeg" });
 
     if (error) return alert(error.message);
 
-    const { data: urlData } = supabase.storage.from("consejos-images").getPublicUrl(fileName);
-    set(field, urlData.publicUrl);
+    // 3) Obtener URL pública y guardarla en el formulario
+    const { data: url } = supabase.storage.from("consejos-images").getPublicUrl(fileName);
+    set(field, url.publicUrl);
   }
 
   async function uploadPDF(e: ChangeEvent<HTMLInputElement>) {
@@ -89,15 +106,14 @@ export default function AddOrEditConsejo() {
       .storage
       .from("consejos-pdf")
       .upload(fileName, file, { contentType: "application/pdf" });
-
     if (error) return alert(error.message);
 
-    const { data: urlData } = supabase.storage.from("consejos-pdf").getPublicUrl(fileName);
-    set("gift_pdf_url", urlData.publicUrl);
+    const { data: url } = supabase.storage.from("consejos-pdf").getPublicUrl(fileName);
+    set("gift_pdf_url", url.publicUrl);
   }
 
-  /* utilidades cliente */
-  function loadImageBitmap(file: File): Promise<ImageBitmap> {
+  /* ---------- Utilidades en navegador ---------- */
+  function loadBitmap(file: File): Promise<ImageBitmap> {
     return new Promise((res, rej) => {
       const fr = new FileReader();
       fr.onload = () => {
@@ -116,12 +132,11 @@ export default function AddOrEditConsejo() {
     const canvas = document.createElement("canvas");
     canvas.width = w;
     canvas.height = h;
-    const ctx = canvas.getContext("2d")!;
-    ctx.drawImage(img, 0, 0, w, h);
+    canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
     return new Promise((res) => canvas.toBlob((b) => res(b!), "image/jpeg", 0.8));
   }
 
-  /* ================ guardar ================ */
+  /* ---------- Guardar ---------- */
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -139,11 +154,11 @@ export default function AddOrEditConsejo() {
     }
 
     setLoading(false);
-    if (!error) router.push("/admin/consejos");
-    else alert(error.message);
+    if (error) alert(error.message);
+    else router.push("/admin/consejos");
   }
 
-  /* ================ UI ================ */
+  /* ---------- Render ---------- */
   return (
     <main className={styles.formMain}>
       <h1>{id ? "Editar Consejo" : "Nuevo Consejo"}</h1>
@@ -180,10 +195,10 @@ export default function AddOrEditConsejo() {
             />
           </label>
 
-          <label>Mensaje Regalo</label>
+          <label>Mensaje regalo</label>
           <input value={data.gift_msg} onChange={(e) => set("gift_msg", e.target.value)} />
 
-          <label>PDF Regalo</label>
+          <label>PDF regalo</label>
           <input type="file" accept="application/pdf" onChange={uploadPDF} />
           {data.gift_pdf_url && (
             <a href={data.gift_pdf_url} target="_blank" className={styles.fileLink}>
@@ -202,7 +217,7 @@ export default function AddOrEditConsejo() {
           <input type="file" accept="image/*" onChange={(e) => uploadImage(e, "photo2")} />
           {data.photo2 && <img src={data.photo2} className={styles.preview} />}
 
-          <label>Contenido (HTML permitido)</label>
+          <label>Contenido (HTML)</label>
           <textarea
             rows={18}
             value={data.content}
@@ -211,7 +226,7 @@ export default function AddOrEditConsejo() {
         </div>
 
         <button className={styles.saveBtn} disabled={loading}>
-          {loading ? "Guardando..." : "Guardar"}
+          {loading ? "Guardando…" : "Guardar"}
         </button>
       </form>
     </main>
