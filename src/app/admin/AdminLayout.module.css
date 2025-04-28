@@ -1,0 +1,11 @@
+.loadingContainer {
+    display: flex;
+    height: 80vh;
+    align-items: center;
+    justify-content: center;
+  }
+  .loadingText {
+    font-size: 1.2rem;
+    color: #333;
+  }
+  
