@@ -3,11 +3,12 @@
 // Formulario Crear/Editar Consejo con subida de imágenes y PDF
 // --------------------------------------------------------------------
 
-// 1) Siempre debe ir en esta orden:
+// 1) Siempre primera línea:
 "use client";
+// 2) Evita prerender estático:
 export const dynamic = "force-dynamic";
 
-import React, { Suspense, useEffect, useState, ChangeEvent } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { nanoid } from "nanoid";
@@ -26,6 +27,7 @@ interface ConsejoFormData {
   gift_msg: string;
   gift_pdf_url: string;
 }
+
 const empty: ConsejoFormData = {
   title: "",
   slug: "",
@@ -48,6 +50,16 @@ function AdminConsejoForm() {
   const [data, setData] = useState<ConsejoFormData>(empty);
   const [loading, setLoading] = useState(false);
 
+  // File selection states
+  const [mainFile, setMainFile] = useState<File | null>(null);
+  const [photo2File, setPhoto2File] = useState<File | null>(null);
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+
+  // Upload loading states
+  const [uploadingMain, setUploadingMain] = useState(false);
+  const [uploadingPhoto2, setUploadingPhoto2] = useState(false);
+  const [uploadingPDF, setUploadingPDF] = useState(false);
+
   useEffect(() => {
     if (!id) return;
     (async () => {
@@ -62,7 +74,7 @@ function AdminConsejoForm() {
         setData({
           ...c,
           hashtags: (c.hashtags || []).join(", "),
-        } as unknown as ConsejoFormData);
+        } as any);
       }
     })();
   }, [id]);
@@ -70,78 +82,115 @@ function AdminConsejoForm() {
   const setField = (key: keyof ConsejoFormData, val: any) =>
     setData((d) => ({ ...d, [key]: val }));
 
-  async function uploadImage(
-    e: ChangeEvent<HTMLInputElement>,
-    field: "main_photo" | "photo2"
-  ) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const bitmap = await loadBitmap(file);
-    const blob = await resizeToBlob(bitmap, 800);
-    const fileName = `${nanoid()}-${file.name.replace(/\s+/g, "_")}.jpg`;
+  // Handler for selecting files
+  const handleMainFileChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setMainFile(e.target.files?.[0] ?? null);
+  const handlePhoto2FileChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setPhoto2File(e.target.files?.[0] ?? null);
+  const handlePdfFileChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setPdfFile(e.target.files?.[0] ?? null);
 
-    const { error } = await supabase
-      .storage
-      .from("consejos-images")
-      .upload(fileName, blob, { contentType: "image/jpeg" });
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
-    const { data: urlData } = supabase
-      .storage
-      .from("consejos-images")
-      .getPublicUrl(fileName);
-    setField(field, urlData.publicUrl);
-  }
-
-  async function uploadPDF(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const fileName = `${nanoid()}-${file.name.replace(/\s+/g, "_")}`;
-
-    const { error } = await supabase
-      .storage
-      .from("consejos-pdf")
-      .upload(fileName, file, { contentType: "application/pdf" });
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
-    const { data: urlData } = supabase
-      .storage
-      .from("consejos-pdf")
-      .getPublicUrl(fileName);
-    setField("gift_pdf_url", urlData.publicUrl);
-  }
-
-  function loadBitmap(file: File): Promise<ImageBitmap> {
-    return new Promise((res, rej) => {
-      const fr = new FileReader();
-      fr.onload = () => {
+  // Resize & compress image to square (800x800) via center crop
+  async function resizeImageFile(
+    file: File,
+    width: number,
+    height: number
+  ): Promise<Blob> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
         const img = new Image();
-        img.onload = () =>
-          createImageBitmap(img).then(res).catch(rej);
-        img.src = fr.result as string;
+        img.onload = () => {
+          const side = Math.min(img.width, img.height);
+          const sx = (img.width - side) / 2;
+          const sy = (img.height - side) / 2;
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d")!;
+          ctx.drawImage(img, sx, sy, side, side, 0, 0, width, height);
+          canvas.toBlob(
+            (blob) => (blob ? resolve(blob) : reject("Canvas empty")),
+            "image/jpeg",
+            0.8
+          );
+        };
+        img.onerror = reject;
+        if (typeof ev.target?.result === "string") {
+          img.src = ev.target.result;
+        }
       };
-      fr.onerror = rej;
-      fr.readAsDataURL(file);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
     });
   }
 
-  function resizeToBlob(img: ImageBitmap, max: number): Promise<Blob> {
-    const scale = Math.min(1, max / Math.max(img.width, img.height));
-    const w = Math.round(img.width * scale);
-    const h = Math.round(img.height * scale);
-    const canvas = document.createElement("canvas");
-    canvas.width = w;
-    canvas.height = h;
-    canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
-    return new Promise((resolve) =>
-      canvas.toBlob((b) => resolve(b!), "image/jpeg", 0.8)
-    );
+  // Upload main image
+  async function handleUploadMain() {
+    if (!mainFile) return;
+    setUploadingMain(true);
+    try {
+      const blob = await resizeImageFile(mainFile, 800, 800);
+      const fileName = `${nanoid()}-${mainFile.name.replace(/\s+/g, "_")}.jpg`;
+      const { error } = await supabase.storage
+        .from("courseimg")
+        .upload(fileName, blob, { contentType: "image/jpeg" });
+      if (error) throw error;
+      const { data: urlData } = supabase.storage
+        .from("courseimg")
+        .getPublicUrl(fileName);
+      setField("main_photo", urlData.publicUrl);
+      setMainFile(null);
+    } catch (err: any) {
+      alert("Error subiendo imagen principal: " + err.message);
+    } finally {
+      setUploadingMain(false);
+    }
+  }
+
+  // Upload photo2
+  async function handleUploadPhoto2() {
+    if (!photo2File) return;
+    setUploadingPhoto2(true);
+    try {
+      const blob = await resizeImageFile(photo2File, 800, 800);
+      const fileName = `${nanoid()}-${photo2File.name.replace(/\s+/g, "_")}.jpg`;
+      const { error } = await supabase.storage
+        .from("courseimg")
+        .upload(fileName, blob, { contentType: "image/jpeg" });
+      if (error) throw error;
+      const { data: urlData } = supabase.storage
+        .from("courseimg")
+        .getPublicUrl(fileName);
+      setField("photo2", urlData.publicUrl);
+      setPhoto2File(null);
+    } catch (err: any) {
+      alert("Error subiendo imagen secundaria: " + err.message);
+    } finally {
+      setUploadingPhoto2(false);
+    }
+  }
+
+  // Upload PDF
+  async function handleUploadPDF() {
+    if (!pdfFile) return;
+    setUploadingPDF(true);
+    try {
+      const fileName = `${nanoid()}-${pdfFile.name.replace(/\s+/g, "_")}`;
+      const { error } = await supabase.storage
+        .from("consejos-pdf")
+        .upload(fileName, pdfFile, { contentType: "application/pdf" });
+      if (error) throw error;
+      const { data: urlData } = supabase.storage
+        .from("consejos-pdf")
+        .getPublicUrl(fileName);
+      setField("gift_pdf_url", urlData.publicUrl);
+      setPdfFile(null);
+    } catch (err: any) {
+      alert("Error subiendo PDF: " + err.message);
+    } finally {
+      setUploadingPDF(false);
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -175,7 +224,6 @@ function AdminConsejoForm() {
     <main className={styles.formMain}>
       <h1>{id ? "Editar Consejo" : "Nuevo Consejo"}</h1>
       <form className={styles.form} onSubmit={handleSubmit}>
-        {/* Columna izquierda */}
         <div className={styles.col}>
           <label>Título</label>
           <input
@@ -227,45 +275,74 @@ function AdminConsejoForm() {
           />
 
           <label>PDF Regalo</label>
-          <input type="file" accept="application/pdf" onChange={uploadPDF} />
+          <div className={styles.uploadRow}>
+            <input
+              type="file"
+              accept="application/pdf"
+              onChange={handlePdfFileChange}
+            />
+            <button
+              type="button"
+              onClick={handleUploadPDF}
+              disabled={!pdfFile || uploadingPDF}
+            >
+              {uploadingPDF ? "Subiendo…" : "Subir PDF"}
+            </button>
+          </div>
           {data.gift_pdf_url && (
             <a
               href={data.gift_pdf_url}
               target="_blank"
               rel="noopener noreferrer"
-              className={styles.fileLink}
             >
               Ver PDF
             </a>
           )}
         </div>
 
-        {/* Columna derecha */}
         <div className={styles.col}>
           <label>Imagen Principal</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => uploadImage(e, "main_photo")}
-          />
+          <div className={styles.uploadRow}>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleMainFileChange}
+            />
+            <button
+              type="button"
+              onClick={handleUploadMain}
+              disabled={!mainFile || uploadingMain}
+            >
+              {uploadingMain ? "Subiendo…" : "Subir Imagen"}
+            </button>
+          </div>
           {data.main_photo && (
             <img
               src={data.main_photo}
-              alt="preview"
+              alt="Preview principal"
               className={styles.preview}
             />
           )}
 
           <label>Imagen Secundaria</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => uploadImage(e, "photo2")}
-          />
+          <div className={styles.uploadRow}>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handlePhoto2FileChange}
+            />
+            <button
+              type="button"
+              onClick={handleUploadPhoto2}
+              disabled={!photo2File || uploadingPhoto2}
+            >
+              {uploadingPhoto2 ? "Subiendo…" : "Subir Imagen"}
+            </button>
+          </div>
           {data.photo2 && (
             <img
               src={data.photo2}
-              alt="preview"
+              alt="Preview secundaria"
               className={styles.preview}
             />
           )}
