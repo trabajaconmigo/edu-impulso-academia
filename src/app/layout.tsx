@@ -65,7 +65,7 @@ export default function RootLayout({
               'https://connect.facebook.net/en_US/fbevents.js');
               
               // Initialize your pixel with your own ID:
-              fbq('init', 'YOUR_PIXEL_ID');
+              fbq('init', '1669960123320655');
               fbq('track', 'PageView');
             `,
           }}
