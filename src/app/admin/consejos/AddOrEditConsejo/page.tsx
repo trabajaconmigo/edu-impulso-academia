@@ -12,6 +12,7 @@ import React, { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { nanoid } from "nanoid";
+import { COURSE_CATEGORIES } from "@/app/components/courseCategories";
 import styles from "./ConsejoForm.module.css";
 
 interface ConsejoFormData {
@@ -90,7 +91,7 @@ function AdminConsejoForm() {
   const handlePdfFileChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setPdfFile(e.target.files?.[0] ?? null);
 
-  // Resize & compress image to fixed 600x400 ratio (center-crop)
+  // Resize & compress image to given ratio via center-crop
   async function resizeImageFile(
     file: File,
     width: number,
@@ -101,9 +102,12 @@ function AdminConsejoForm() {
       reader.onload = (ev) => {
         const img = new Image();
         img.onload = () => {
-          // Center-crop to match 3:2 aspect ratio
+          // Center-crop to match desired aspect ratio
           const targetRatio = width / height;
-          let sx = 0, sy = 0, sw = img.width, sh = img.height;
+          let sx = 0,
+            sy = 0,
+            sw = img.width,
+            sh = img.height;
           const imgRatio = img.width / img.height;
           if (imgRatio > targetRatio) {
             // image is wider than target -> crop sides
@@ -135,12 +139,12 @@ function AdminConsejoForm() {
     });
   }
 
-  // Upload main image (600×400)
+  // Upload main image (1000×500, 2:1 ratio)
   async function handleUploadMain() {
     if (!mainFile) return;
     setUploadingMain(true);
     try {
-      const blob = await resizeImageFile(mainFile, 700, 467);
+      const blob = await resizeImageFile(mainFile, 1000, 500);
       const fileName = `${nanoid()}-${mainFile.name.replace(/\s+/g, "_")}.jpg`;
       const { error } = await supabase.storage
         .from("courseimg")
@@ -158,7 +162,7 @@ function AdminConsejoForm() {
     }
   }
 
-  // Upload photo2 (600×400)
+  // Upload photo2 (remains at 700×467)
   async function handleUploadPhoto2() {
     if (!photo2File) return;
     setUploadingPhoto2(true);
@@ -260,10 +264,17 @@ function AdminConsejoForm() {
           />
 
           <label>Categoría</label>
-          <input
+          <select
             value={data.category}
             onChange={(e) => setField("category", e.target.value)}
-          />
+          >
+            <option value="">Selecciona categoría</option>
+            {COURSE_CATEGORIES.map((cat) => (
+              <option key={cat.value} value={cat.value}>
+                {cat.label}
+              </option>
+            ))}
+          </select>
 
           <label>Hashtags (coma separados)</label>
           <input
