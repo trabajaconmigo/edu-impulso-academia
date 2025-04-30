@@ -82,7 +82,7 @@ function AdminConsejoForm() {
   const setField = (key: keyof ConsejoFormData, val: any) =>
     setData((d) => ({ ...d, [key]: val }));
 
-  // Handler for selecting files
+  // Handlers for file inputs
   const handleMainFileChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setMainFile(e.target.files?.[0] ?? null);
   const handlePhoto2FileChange = (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -90,7 +90,7 @@ function AdminConsejoForm() {
   const handlePdfFileChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setPdfFile(e.target.files?.[0] ?? null);
 
-  // Resize & compress image to square (800x800) via center crop
+  // Resize & compress image to fixed 600x400 ratio (center-crop)
   async function resizeImageFile(
     file: File,
     width: number,
@@ -101,14 +101,24 @@ function AdminConsejoForm() {
       reader.onload = (ev) => {
         const img = new Image();
         img.onload = () => {
-          const side = Math.min(img.width, img.height);
-          const sx = (img.width - side) / 2;
-          const sy = (img.height - side) / 2;
+          // Center-crop to match 3:2 aspect ratio
+          const targetRatio = width / height;
+          let sx = 0, sy = 0, sw = img.width, sh = img.height;
+          const imgRatio = img.width / img.height;
+          if (imgRatio > targetRatio) {
+            // image is wider than target -> crop sides
+            sw = img.height * targetRatio;
+            sx = (img.width - sw) / 2;
+          } else {
+            // image is taller -> crop top/bottom
+            sh = img.width / targetRatio;
+            sy = (img.height - sh) / 2;
+          }
           const canvas = document.createElement("canvas");
           canvas.width = width;
           canvas.height = height;
           const ctx = canvas.getContext("2d")!;
-          ctx.drawImage(img, sx, sy, side, side, 0, 0, width, height);
+          ctx.drawImage(img, sx, sy, sw, sh, 0, 0, width, height);
           canvas.toBlob(
             (blob) => (blob ? resolve(blob) : reject("Canvas empty")),
             "image/jpeg",
@@ -125,12 +135,12 @@ function AdminConsejoForm() {
     });
   }
 
-  // Upload main image
+  // Upload main image (600×400)
   async function handleUploadMain() {
     if (!mainFile) return;
     setUploadingMain(true);
     try {
-      const blob = await resizeImageFile(mainFile, 800, 800);
+      const blob = await resizeImageFile(mainFile, 700, 467);
       const fileName = `${nanoid()}-${mainFile.name.replace(/\s+/g, "_")}.jpg`;
       const { error } = await supabase.storage
         .from("courseimg")
@@ -148,12 +158,12 @@ function AdminConsejoForm() {
     }
   }
 
-  // Upload photo2
+  // Upload photo2 (600×400)
   async function handleUploadPhoto2() {
     if (!photo2File) return;
     setUploadingPhoto2(true);
     try {
-      const blob = await resizeImageFile(photo2File, 800, 800);
+      const blob = await resizeImageFile(photo2File, 700, 467);
       const fileName = `${nanoid()}-${photo2File.name.replace(/\s+/g, "_")}.jpg`;
       const { error } = await supabase.storage
         .from("courseimg")
@@ -193,6 +203,7 @@ function AdminConsejoForm() {
     }
   }
 
+  // Form submit
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -224,6 +235,7 @@ function AdminConsejoForm() {
     <main className={styles.formMain}>
       <h1>{id ? "Editar Consejo" : "Nuevo Consejo"}</h1>
       <form className={styles.form} onSubmit={handleSubmit}>
+        {/* Columna izquierda */}
         <div className={styles.col}>
           <label>Título</label>
           <input
@@ -300,6 +312,7 @@ function AdminConsejoForm() {
           )}
         </div>
 
+        {/* Columna derecha */}
         <div className={styles.col}>
           <label>Imagen Principal</label>
           <div className={styles.uploadRow}>
