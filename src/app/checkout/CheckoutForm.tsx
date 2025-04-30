@@ -74,7 +74,7 @@ export default function CheckoutForm({
       });
 
       // 4) Redirigir al perfil
-      window.location.href = "/perfil";
+      window.location.href = "/felicidades";
     }
   };
 
