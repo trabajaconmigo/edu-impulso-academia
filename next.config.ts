@@ -14,3 +14,8 @@ const nextConfig = {
 };
 
 module.exports = nextConfig;
+
+// next.config.js  (ES Module válido para Next 15)
+export default {
+  reactStrictMode: true,
+};
