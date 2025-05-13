@@ -1,3 +1,5 @@
+// File: src/app/presentacion/[id]/show/page.jsx
+
 'use client';
 
 import { useParams } from 'next/navigation';
@@ -16,7 +18,10 @@ import {
   FiChevronRight,
   FiMaximize,
   FiArrowLeft,
-  FiDownload
+  FiDownload,
+  FiCheck,
+  FiStar,
+  FiArrowRight
 } from 'react-icons/fi';
 
 import '@/app/presentacion/slides.css';
@@ -36,7 +41,14 @@ export default function SlideShow() {
   const [idx, setIdx] = useState(0);
   const [reveal, setReveal] = useState(0);
 
-  // Load presentation orientation and slides
+  // map slide.icon to actual component
+  const iconMap = {
+    FiCheck: FiCheck,
+    FiStar: FiStar,
+    FiArrowRight: FiArrowRight
+  };
+
+  // Load orientation and slides
   useEffect(() => {
     (async () => {
       const { data: pres } = await supabase
@@ -55,16 +67,14 @@ export default function SlideShow() {
     })();
   }, [id]);
 
-  // Current slide and its lines
+  // Current slide and its content lines
   const current = slides[idx] || {};
   const currentLines = (current.content || '')
     .split('\n')
     .filter((l) => l.trim().length);
 
-  // Short slide threshold
   const isShort = currentLines.length <= 3;
 
-  // Slide navigation
   const nextSlide = useCallback(() => {
     setIdx((i) => Math.min(slides.length - 1, i + 1));
     setReveal(0);
@@ -75,7 +85,6 @@ export default function SlideShow() {
     setReveal(0);
   }, []);
 
-  // Reveal bullets
   const revealNext = useCallback(() => {
     setReveal((r) => Math.min(currentLines.length, r + 1));
   }, [currentLines.length]);
@@ -84,7 +93,6 @@ export default function SlideShow() {
     setReveal((r) => Math.max(0, r - 1));
   }, []);
 
-  // Keyboard controls
   const handleKey = useCallback(
     (e) => {
       if (e.key === 'ArrowRight') nextSlide();
@@ -101,7 +109,6 @@ export default function SlideShow() {
     return () => window.removeEventListener('keydown', handleKey);
   }, [handleKey]);
 
-  // Download PDF
   const downloadPDF = async () => {
     const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: 'a4' });
     for (let i = 0; i < slides.length; i++) {
@@ -120,6 +127,9 @@ export default function SlideShow() {
   };
 
   if (!slides.length) return <p>Cargando…</p>;
+
+  // pick the icon component or null
+  const BulletIcon = current.icon ? iconMap[current.icon] : null;
 
   return (
     <>
@@ -163,16 +173,12 @@ export default function SlideShow() {
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.4 }}
             >
-              {/* Title container: top for tall slides, slightly down for short slides */}
               {current.title && (
-                <div
-                  className={`title-container${isShort ? ' title-short' : ''}`}
-                >
+                <div className={`title-container${isShort ? ' title-short' : ''}`}>
                   <h1 className="slide-title">{current.title}</h1>
                 </div>
               )}
 
-              {/* Revealable bullets */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {currentLines.map((line, i) => (
                   <div
@@ -180,13 +186,23 @@ export default function SlideShow() {
                     className={`bullet ${
                       i < reveal ? 'shown' : ''
                     } ${i === reveal - 1 ? 'current' : ''}`}
+                    style={{ display: 'flex', alignItems: 'flex-start' }}
                   >
+                   {BulletIcon && (
+  <BulletIcon
+    style={{
+      flexShrink: 0,
+      marginRight: '0.5rem',
+      transform: 'translateY(15px)'
+    }}
+  />
+)}
+
                     {line}
                   </div>
                 ))}
               </div>
 
-              {/* Optional image */}
               {current.image_url && (
                 <div style={{ marginTop: '1rem' }}>
                   <Image
@@ -199,12 +215,10 @@ export default function SlideShow() {
                 </div>
               )}
 
-              {/* Optional chart */}
               {current.graph_config && reveal === currentLines.length && (
                 <DynamicChart config={JSON.parse(current.graph_config)} />
               )}
 
-              {/* Logo with fade-in */}
               <motion.div className="logo-anim">
                 <Image
                   src="/escuela360_logo.jpg"

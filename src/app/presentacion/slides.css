@@ -141,7 +141,7 @@
   /* Coloca el título siempre arriba, centrado */
   .title-container {
     position: absolute;
-    top: 1.5rem;             /* ajusta a tu gusto */
+    top: 11.5rem;             /* ajusta a tu gusto */
     left: 50%;
     transform: translateX(-50%);
     width: 100%;
@@ -162,4 +162,13 @@
     top: 50% !important;
     transform: translate(-50%, -50%) !important;
   }
-    
+
+  /* al principio de tu sección de VIÑETAS */
+.bullet {
+    display: flex;
+    align-items: center;
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.4s, transform 0.4s;
+  }
+  
