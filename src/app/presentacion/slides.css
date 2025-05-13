@@ -1,0 +1,165 @@
+/* -------------------------------------------------- */
+/* slides.css                                         */
+/* -------------------------------------------------- */
+
+/* Contenedor full-screen de la slide */
+.fullscreen-slide {
+    position: relative;               /* para posicionar logo */
+    background: #fff;
+    box-shadow: 0 0 24px rgba(0,0,0,.08);
+    border-radius: 10px;
+    overflow: hidden;
+    max-width: 1800px;
+    max-height: 95vh;
+    margin: auto;
+  }
+  
+  /* Wrapper general: centrar vertical */
+  .horizontal .slide-wrapper,
+  .vertical .slide-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;         /* centra todo verticalmente */
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    padding: 4rem 5rem;
+    gap: 2rem;
+    color: #1c1d1f;
+  }
+  
+  /* Tamaño de fuente según orientación */
+  .horizontal .slide-wrapper { font-size: clamp(1.6rem, 2vw + 1rem, 2.6rem); }
+  .vertical   .slide-wrapper { font-size: clamp(1.9rem, 2.3vw + 1.4rem, 3.1rem); }
+  
+  /* -------------------------------------------------- */
+  /* TÍTULO                                            */
+  /* -------------------------------------------------- */
+  .title-container {
+    width: 100%;
+    /* fija la altura para evitar salto al revelar bullets */
+    min-height: 2.2em;                
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .slide-title {
+    text-align: center;
+    font-size: 1.5em;
+    font-weight: 900;
+    letter-spacing: -0.015em;
+    margin: 0;
+  }
+  
+  /* -------------------------------------------------- */
+  /* VIÑETAS                                           */
+  /* -------------------------------------------------- */
+  .bullet {
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.4s, transform 0.4s;
+  }
+  .bullet.shown {
+    opacity: 1;
+    transform: none;
+  }
+  .bullet.current {
+    font-weight: 900;
+    text-decoration: underline;
+    font-size: 1.2em;
+    transition: font-size 0.3s ease;
+  }
+  
+  /* -------------------------------------------------- */
+  /* LOGO                                              */
+  /* -------------------------------------------------- */
+  .slide-logo {
+    position: absolute;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    width: 140px;
+    height: auto;
+    opacity: 0;
+    z-index: 10;
+    animation: logoFade 0.6s ease-in-out 0.6s forwards;
+  }
+  @keyframes logoFade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  
+  /* -------------------------------------------------- */
+  /* BOTONES DE NAVEGACIÓN                             */
+  /* -------------------------------------------------- */
+  .back-btn, .fullscreen-toggle {
+    position: fixed;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-weight: 600;
+  }
+  
+  /* Botón “Volver” */
+  .back-btn {
+    top: 1.2rem;
+    left: 1.2rem;
+    background: #fff;
+    padding: 0.42rem 0.8rem;
+    border: 1px solid #d1d7dc;
+    border-radius: 4px;
+    color: #5833a0;
+  }
+  .back-btn:hover {
+    background: #f2f2f2;
+  }
+  
+  /* Botón fullscreen */
+  .fullscreen-toggle {
+    bottom: 1.2rem;
+    right: 1.2rem;
+    width: 58px;
+    height: 58px;
+    background: #5833a0;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    justify-content: center;
+  }
+  .fullscreen-toggle:hover {
+    filter: brightness(1.1);
+  }
+  
+  /* -------------------------------------------------- */
+/* TÍTULO FIJO                                        */
+/* -------------------------------------------------- */
+.slide-wrapper {
+    position: relative;      /* para que los absolute hijos se posicionen dentro */
+    padding-top: 6rem;       /* espacio para dejar hueco al título */
+  }
+  
+  /* Coloca el título siempre arriba, centrado */
+  .title-container {
+    position: absolute;
+    top: 1.5rem;             /* ajusta a tu gusto */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;    /* que no interfiera con focus */
+  }
+  
+  /* Si quieres un fondo semi-transparente detrás del título:
+  .title-container {
+    background: rgba(255,255,255,0.8);
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+  }
+  */
+/* Clase para centrar el título verticalmente */
+.title-center {
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+  }
+    
