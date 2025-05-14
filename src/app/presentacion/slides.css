@@ -141,7 +141,7 @@
   /* Coloca el título siempre arriba, centrado */
   .title-container {
     position: absolute;
-    top: 11.5rem;             /* ajusta a tu gusto */
+    top: 8.0rem;             /* ajusta a tu gusto */
     left: 50%;
     transform: translateX(-50%);
     width: 100%;
