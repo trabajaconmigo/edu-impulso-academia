@@ -1,352 +1,221 @@
+// File: src/app/presentacion/[id]/show/page.jsx
 'use client';
 
-import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState, useRef } from 'react';
-import Link from 'next/link';
-import dynamic from 'next/dynamic';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
-import { supabase } from '@/lib/supabaseClient';
+import { useParams } from 'next/navigation';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import Link           from 'next/link';
+import Image          from 'next/image';
+import dynamic        from 'next/dynamic';
+import html2canvas    from 'html2canvas';
+import jsPDF          from 'jspdf';
+import { supabase }   from '@/lib/supabaseClient';
+import { FullScreen, useFullScreenHandle } from 'react-full-screen';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-  FiArrowLeft,
-  FiPlus,
-  FiTrash2,
-  FiSave,
-  FiDownload,
-  FiCheck,
-  FiStar,
-  FiArrowRight
+  FiChevronLeft, FiChevronRight, FiMaximize, FiArrowLeft, FiDownload, FiLayers,
+  FiCheck, FiStar, FiArrowRight
 } from 'react-icons/fi';
-import styles from '../../Editor.module.css';
-import '@/app/presentacion/slides.css';  // aplica estilos de pantalla completa
+import '@/app/presentacion/slides.css';
 
 const DynamicChart = dynamic(
   () => import('@/app/presentacion/Chart'),
   { ssr: false }
 );
 
-export default function EditPresentation() {
-  const { id } = useParams();
-  const router = useRouter();
+export default function SlideShow () {
+  /* refs y helpers */
+  const { id }     = useParams();
+  const handleFS   = useFullScreenHandle();
+  const slideRef   = useRef(null);
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState('');
-  const [pres, setPres]       = useState(null);
-  const [slides, setSlides]   = useState([]);
+  /* estado principal */
+  const [slides,       setSlides]  = useState([]);
+  const [loading,      setLoad]    = useState(true);
+  const [orientation,  setOri]     = useState('horizontal');
+  const [idx,          setIdx]     = useState(0);
+  const [reveal,       setReveal]  = useState(0);     // step-by-step
+  const [showAll,      setShowAll] = useState(false); // modo completo
 
-  // Contenedor oculto para PDF
-  const pdfRef = useRef(null);
+  /* mapa iconos → componente */
+  const iconMap = useMemo(
+    () => ({ FiCheck, FiStar, FiArrowRight }),
+    []
+  );
 
-  // Load presentation + slides
+  /* ------- fetch presentación + slides ------------------------------- */
   useEffect(() => {
     (async () => {
-      const { data: p, error: e1 } = await supabase
+      const { data: pres } = await supabase
         .from('presentations')
-        .select('*')
+        .select('orientation, reveal_mode')
         .eq('id', id)
         .single();
-      const { data: s, error: e2 } = await supabase
+
+      if (pres) {
+        setOri(pres.orientation);
+        setShowAll(pres.reveal_mode === 'full');
+      }
+
+      const { data: s } = await supabase
         .from('slides')
         .select('*')
         .eq('presentation_id', id)
         .order('slide_order');
-      if (e1 || e2) {
-        setError((e1 || e2).message);
-      } else {
-        setPres(p);
-        setSlides(s);
-      }
-      setLoading(false);
+
+      setSlides(s || []);
+      setLoad(false);
     })();
   }, [id]);
 
-  // Save presentation meta
-  async function savePresentation() {
-    const { error } = await supabase
-      .from('presentations')
-      .update({ title: pres.title, orientation: pres.orientation })
-      .eq('id', id);
-    if (error) setError(error.message);
-    else alert('¡Presentación guardada!');
-  }
+  /* -------- derivados ------------------------------------------------ */
+  const current     = slides[idx] || {};
+  const lines       = (current.content || '').split('\n').filter(l => l.trim());
+  const isShort     = lines.length <= 3;
+  const Bullet      = current.icon ? iconMap[current.icon] : null;
+  const visible     = showAll ? lines.length : reveal;
 
-  // Add slide (default icon = none "")
-  async function addSlide() {
-    const nextOrder = slides.length
-      ? slides[slides.length - 1].slide_order + 1
-      : 1;
-    const { data, error } = await supabase
-      .from('slides')
-      .insert({
-        presentation_id: id,
-        slide_order: nextOrder,
-        title: `Diapositiva ${nextOrder}`,
-        content: '',
-        image_url: '',
-        graph_config: '',
-        icon: ''
-      })
-      .select()
-      .single();
-    if (error) setError(error.message);
-    else setSlides([...slides, data]);
-  }
+  /* -------- navegación ---------------------------------------------- */
+  const next   = useCallback(() => { setIdx(i => Math.min(slides.length-1,i+1)); setReveal(0); }, [slides.length]);
+  const prev   = useCallback(() => { setIdx(i => Math.max(0,i-1));             setReveal(0); }, []);
+  const down   = useCallback(() => setReveal(r => Math.min(lines.length, r+1)), [lines.length]);
+  const up     = useCallback(() => setReveal(r => Math.max(0, r-1)), []);
+  const toggle = useCallback(() => setShowAll(v => !v), []);
 
-  // Save a single slide (including icon)
-  async function saveSlide(slide) {
-    const { error } = await supabase
-      .from('slides')
-      .update({
-        title: slide.title,
-        content: slide.content,
-        image_url: slide.image_url,
-        graph_config: slide.graph_config,
-        icon: slide.icon
-      })
-      .eq('id', slide.id);
-    if (error) setError(error.message);
-    else alert(`Diapositiva ${slide.slide_order} guardada ✔`);
-  }
+  const handleKey = useCallback(e => {
+    if (e.key === 'ArrowRight') next();
+    if (e.key === 'ArrowLeft')  prev();
+    if (e.key === 'ArrowDown')  down();
+    if (e.key === 'ArrowUp')    up();
+    if (e.key.toLowerCase() === 'm') toggle();
+    if (e.key === 'Escape' && handleFS.active) handleFS.exit();
+  }, [next,prev,down,up,toggle,handleFS]);
 
-  // Delete slide
-  async function deleteSlide(slideId) {
-    const { error } = await supabase
-      .from('slides')
-      .delete()
-      .eq('id', slideId);
-    if (error) setError(error.message);
-    else setSlides(slides.filter((s) => s.id !== slideId));
-  }
+  useEffect(() => {
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [handleKey]);
 
-  // Export to PDF (unchanged)
-  const exportPDF = async () => {
-    if (!pres || slides.length === 0) return;
-    const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: 'a4' });
-    for (let i = 0; i < slides.length; i++) {
-      const slide = slides[i];
-      const container = pdfRef.current;
-      const lines = (slide.content || '').split('\n').filter((l) => l.trim());
-      // Build HTML with icon span if slide.icon
-      let html = `
-        <div class="${pres.orientation}">
-          <div class="slide-wrapper fullscreen-slide relative">
-            <div class="title-container">
-              <h1 class="slide-title">${slide.title || ''}</h1>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:1rem;padding-top:2.5rem;">
-              ${lines
-                .map((l) => {
-                  if (!slide.icon) {
-                    return `<div class="bullet shown">${l}</div>`;
-                  }
-                  return `<div class="bullet shown">
-                            <span class="pdf-icon">${slide.icon}</span>${l}
-                          </div>`;
-                })
-                .join('')}
-            </div>
-            ${slide.image_url ? `<img src="${slide.image_url}" style="max-width:100%;margin-top:1rem;"/>` : ''}
-            ${slide.graph_config ? '<canvas id="chart-canvas"></canvas>' : ''}
-            <img src="/escuela360_logo.jpg" class="slide-logo"/>
-          </div>
-        </div>`;
-      container.innerHTML = html;
-
-      if (slide.graph_config) {
-        try {
-          const config = JSON.parse(slide.graph_config);
-          await new Promise((res) => {
-            setTimeout(() => {
-              const ctx = container.querySelector('#chart-canvas').getContext('2d');
-              // eslint-disable-next-line no-new
-              new (require('chart.js/auto'))(ctx, config);
-              res();
-            }, 300);
-          });
-        } catch (e) {}
-      }
-
-      await new Promise((r) => setTimeout(r, 300));
-      const canvas = await html2canvas(container, { backgroundColor: '#fff' });
-      const img = canvas.toDataURL('image/png', 1.0);
-      const ratio = canvas.width / canvas.height;
-      const pageW = pdf.internal.pageSize.getWidth();
-      const pageH = pageW / ratio;
-      if (i > 0) pdf.addPage();
-      pdf.addImage(img, 'PNG', 0, 0, pageW, pageH);
+  /* -------- PDF export --------------------------------------------- */
+  const downloadPDF = async () => {
+    const pdf = new jsPDF({ orientation:'landscape', unit:'px', format:'a4' });
+    for (let i=0;i<slides.length;i++) {
+      setIdx(i); setReveal(lines.length);
+      await new Promise(r=>setTimeout(r,300));
+      const canvas = await html2canvas(slideRef.current,{background:'#fff'});
+      const img = canvas.toDataURL('image/png',1);
+      const W = pdf.internal.pageSize.getWidth();
+      const H = W / (canvas.width/canvas.height);
+      if (i>0) pdf.addPage();
+      pdf.addImage(img,'PNG',0,0,W,H);
     }
-    pdf.save(`${pres.title || 'presentacion'}.pdf`);
+    pdf.save('presentacion.pdf');
   };
 
+  /* -------- render --------------------------------------------------- */
   if (loading) return <p>Cargando…</p>;
-  if (error) return <p style={{ color: 'red' }}>Error: {error}</p>;
-  if (!pres) return <p>Presentación no encontrada.</p>;
 
   return (
-    <div className="container" style={{ maxWidth: '980px' }}>
-      {/* Navbar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
-        <Link href="/presentacion" className={styles.newBtn}>
-          <FiArrowLeft /> Volver
-        </Link>
-        <h1 className="title" style={{ margin: 0 }}>Editar presentación</h1>
+    <>
+      {/* --- botones fijos --- */}
+      <Link href="/presentacion" className="back-btn"><FiArrowLeft/> Volver</Link>
 
-        <button onClick={exportPDF} className={styles.newBtn} style={{ marginLeft: 'auto' }}>
-          <FiDownload /> Exportar PDF
-        </button>
+      <button className="fullscreen-toggle" onClick={handleFS.enter}>
+        <FiMaximize size={24}/>
+      </button>
 
-        <button
-          onClick={() => router.push(`/presentacion/${id}/show`)}
-          className={styles.newBtn}
-          style={{ background: '#2e9c48' }}
-        >
-          Vista previa
-        </button>
-      </div>
+      <button onClick={toggle} title="Paso a paso / Completo (M)"
+              style={{
+                position:'fixed',bottom:'1.2rem',left:'calc(1.2rem + 70px)',
+                zIndex:9999,background:'#fff',border:'1px solid #d1d7dc',
+                borderRadius:4,padding:'.45rem .6rem',display:'flex',
+                alignItems:'center',gap:'.4rem'
+              }}>
+        <FiLayers/>{showAll ? 'Paso' : 'Todo'}
+      </button>
 
-      {/* Presentation info */}
-      <div className={styles.card} style={{ marginBottom: '2rem' }}>
-        <label>
-          Título
-          <input
-            value={pres.title}
-            onChange={(e) => setPres({ ...pres, title: e.target.value })}
-            className={styles.input}
-          />
-        </label>
-        <label>
-          Orientación
-          <select
-            value={pres.orientation}
-            onChange={(e) => setPres({ ...pres, orientation: e.target.value })}
-            className={styles.select}
-          >
-            <option value="horizontal">Horizontal</option>
-            <option value="vertical">Vertical</option>
-          </select>
-        </label>
-        <div style={{ display: 'flex', gap: '0.8rem', marginTop: '1rem' }}>
-          <button onClick={savePresentation} className={styles.newBtn}>
-            <FiSave /> Guardar presentación
-          </button>
+      <button onClick={downloadPDF}
+              style={{
+                position:'fixed',bottom:'1.2rem',left:'1.2rem',
+                zIndex:9999,background:'#fff',border:'1px solid #d1d7dc',
+                borderRadius:4,padding:'.45rem .6rem',display:'flex',
+                alignItems:'center',gap:'.4rem'
+              }}>
+        <FiDownload/> PDF
+      </button>
+
+      {/* --- presentación --- */}
+      <FullScreen handle={handleFS}>
+        <div className={`${orientation} w-screen h-screen flex items-center justify-center bg-[#f8f9fa] overflow-hidden`}>
+          <AnimatePresence mode="wait">
+            <motion.div key={current.id} ref={slideRef}
+                        className="slide-wrapper fullscreen-slide relative"
+                        initial={{opacity:0,scale:.97}}
+                        animate={{opacity:1,scale:1}}
+                        exit={{opacity:0,scale:.95}}
+                        transition={{duration:.4}}>
+
+              {/* título */}
+              {current.title && (
+                <div className={`title-container${isShort?' title-short':''}`}>
+                  <h1 className="slide-title">{current.title}</h1>
+                </div>
+              )}
+
+              {/* bullets */}
+              <div style={{display:'flex',flexDirection:'column',gap:'1rem'}}>
+                {lines.map((l,i)=>{
+                  const isShown   = i < visible;
+                  const isCurrent = !showAll && (i === visible-1);
+                  return (
+                    <div key={i}
+                         className={`bullet ${isShown?'shown':''} ${isCurrent?'current':''}`}
+                         style={{display:'flex',alignItems:'flex-start'}}>
+                      {Bullet && (
+                        <Bullet style={{flexShrink:0,marginRight:'.5rem',transform:'translateY(15px)'}}/>
+                      )}
+                      {l}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* imagen opcional */}
+              {current.image_url && (
+                <div style={{marginTop:'1rem'}}>
+                  <Image src={current.image_url} alt=""
+                         width={1000} height={560}
+                         style={{maxWidth:'100%',height:'auto'}}/>
+                </div>
+              )}
+
+              {/* gráfica opcional */}
+              {current.graph_config && visible === lines.length && (
+                <DynamicChart config={JSON.parse(current.graph_config)}/>
+              )}
+
+              {/* logo */}
+              <motion.div className="logo-anim">
+                <Image src="/escuela360_logo.jpg" alt="logo"
+                       className="slide-logo" width={140} height={45}/>
+              </motion.div>
+            </motion.div>
+          </AnimatePresence>
         </div>
-      </div>
+      </FullScreen>
 
-      {/* Slides list */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1rem' }}>
-        <h2 style={{ margin: 0 }}>Diapositivas</h2>
-        <button onClick={addSlide} className={styles.newBtn}>
-          <FiPlus /> Nueva diapositiva
+      {/* flechas */}
+      {idx>0 && (
+        <button onClick={prev}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-4xl text-[#5833a0]/80">
+          <FiChevronLeft/>
         </button>
-      </div>
-
-      {slides.map((slide) => (
-        <div key={slide.id} className={styles.card} style={{ marginBottom: '1.5rem' }}>
-          <h4 style={{ margin: '0 0 0.8rem 0' }}>#{slide.slide_order}</h4>
-
-          <label>
-            Título
-            <input
-              value={slide.title}
-              onChange={(e) =>
-                setSlides(
-                  slides.map((s) => (s.id === slide.id ? { ...s, title: e.target.value } : s))
-                )
-              }
-              className={styles.input}
-            />
-          </label>
-
-          <label>
-            Contenido (Markdown / texto)
-            <textarea
-              rows={4}
-              value={slide.content}
-              onChange={(e) =>
-                setSlides(
-                  slides.map((s) => (s.id === slide.id ? { ...s, content: e.target.value } : s))
-                )
-              }
-              className={styles.input}
-            />
-          </label>
-
-          <label>
-            URL Imagen (opcional)
-            <input
-              value={slide.image_url}
-              onChange={(e) =>
-                setSlides(
-                  slides.map((s) => (s.id === slide.id ? { ...s, image_url: e.target.value } : s))
-                )
-              }
-              className={styles.input}
-            />
-          </label>
-
-          <label>
-            Gráfica (JSON opcional)
-            <textarea
-              rows={4}
-              value={slide.graph_config}
-              onChange={(e) =>
-                setSlides(
-                  slides.map((s) => (s.id === slide.id ? { ...s, graph_config: e.target.value } : s))
-                )
-              }
-              className={styles.input}
-            />
-          </label>
-
-          {/* Nuevo campo: Icono (incluye Ninguno) */}
-          <label>
-            Icono
-            <select
-              value={slide.icon || ''}
-              onChange={(e) =>
-                setSlides(
-                  slides.map((s) =>
-                    s.id === slide.id ? { ...s, icon: e.target.value } : s
-                  )
-                )
-              }
-              className={styles.select}
-            >
-              <option value="">Ninguno</option>
-              <option value="FiCheck">✔ Check</option>
-              <option value="FiStar">★ Star</option>
-              <option value="FiArrowRight">→ Arrow</option>
-            </select>
-          </label>
-
-          <div style={{ display: 'flex', gap: '0.7rem', marginTop: '1rem' }}>
-            <button onClick={() => saveSlide(slide)} className={styles.newBtn}>
-              <FiSave /> Guardar
-            </button>
-            <button
-              onClick={() => deleteSlide(slide.id)}
-              className={styles.newBtn}
-              style={{ background: '#d9534f' }}
-            >
-              <FiTrash2 /> Eliminar
-            </button>
-          </div>
-        </div>
-      ))}
-
-      {/* Hidden PDF container */}
-      <div
-        ref={pdfRef}
-        style={{
-          position: 'fixed',
-          top: '-10000px',
-          left: '-10000px',
-          width: '1800px',
-          height: '1000px',
-          background: '#fff',
-          overflow: 'hidden'
-        }}
-      />
-    </div>
+      )}
+      {idx<slides.length-1 && (
+        <button onClick={next}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-4xl text-[#5833a0]/80">
+          <FiChevronRight/>
+        </button>
+      )}
+    </>
   );
 }
