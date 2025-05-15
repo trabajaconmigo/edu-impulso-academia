@@ -1,0 +1,29 @@
+.box {
+  margin-top: 2rem;
+  text-align: left;
+}
+
+.item {
+  border: 1px solid #eee;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: #fafafa;
+}
+
+.headline {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #111;
+}
+
+.sub {
+  margin-top: 0.3rem;
+  color: #555;
+}
+
+.tags {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--purple-dark);
+}

@@ -1,0 +1,82 @@
+.box {
+  margin-top: 2rem;
+}
+
+.item {
+  border: 1px solid #eee;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: #fafafa;
+}
+
+/* fila texto + icono */
+.textRow {
+  position: relative;
+  padding-right: 2rem;          /* deja espacio al icono */
+  margin-bottom: 0.4rem;
+}
+
+.headline {
+  font-weight: 600;
+}
+
+.sub {
+  color: #555;
+}
+
+/* botón copiar */
+.copyBtn {
+  position: absolute;
+  right: 0;
+  top: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1.1rem;
+  color: var(--purple-dark);
+}
+.copyBtn:hover {
+  color: var(--purple);
+}
+
+.tags {
+  margin-top: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--purple-dark);
+}
+
+.btnAgain {
+  display: inline-block;
+  margin-top: 1rem;
+  background: #eee;
+  padding: 0.7rem 1.2rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.btnAgain:hover {
+  background: #ddd;
+}
+/* …estilos existentes… */
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--purple);
+  color: #fff;
+  padding: 0.6rem 1.2rem;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.2);
+  animation: fade 2s ease forwards;
+  z-index: 1000;
+}
+
+@keyframes fade {
+  0%   { opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { opacity: 0; }
+}

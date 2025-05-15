@@ -18,6 +18,7 @@
     "chart.js": "^4.4.9",
     "chartjs-adapter-date-fns": "^3.0.0",
     "chartjs-plugin-annotation": "^3.1.0",
+    "cheerio": "^1.0.0",
     "date-fns": "^4.1.0",
     "dompurify": "^3.2.5",
     "framer-motion": "^12.11.0",
@@ -26,6 +27,7 @@
     "jspdf": "^3.0.1",
     "nanoid": "^5.1.5",
     "next": "15.2.4",
+    "openai": "^4.98.0",
     "react": "^19.0.0",
     "react-chartjs-2": "^5.3.0",
     "react-dom": "^19.0.0",
@@ -36,6 +38,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "@types/cheerio": "^1.0.0",
     "@types/node": "^20.17.28",
     "@types/react": "^19",
     "@types/react-dom": "^19",
